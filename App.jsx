@@ -41,7 +41,6 @@ function parseFechaNum(f) {
   return y*100000000 + m*1000000 + d*10000 + parseInt(h[0]||0)*100 + parseInt(h[1]||0)
 }
 
-// Convierte "1/06/2026 16:43:14" a Date para comparar rangos
 function parseFechaDate(f) {
   if (!f) return null
   const str = String(f).trim()
@@ -86,42 +85,73 @@ function Card({ children, style = {} }) {
   )
 }
 
-function FilterInput({ placeholder, value, setter }) {
-  return (
-    <input placeholder={placeholder} value={value}
-      onChange={e => setter(e.target.value)}
-      style={{ background: '#F4F6FA', border: `1px solid ${C.border}`, borderRadius: 8,
-        padding: '7px 11px', fontSize: 11, color: C.text, outline: 'none', width: 148 }} />
-  )
+const inputStyle = {
+  background: '#F4F6FA', border: `1px solid rgba(30,111,191,0.2)`,
+  borderRadius: 7, padding: '6px 10px', fontSize: 11,
+  color: '#1A2B4A', outline: 'none', width: '100%', boxSizing: 'border-box'
 }
 
-function FilterSelect({ value, setter, options, placeholder }) {
+function FilterBar({ children, onClear, count, active }) {
   return (
-    <select value={value} onChange={e => setter(e.target.value)}
-      style={{ background: '#F4F6FA', border: `1px solid ${C.border}`, borderRadius: 8,
-        padding: '7px 11px', fontSize: 11, color: value ? C.text : C.muted, outline: 'none' }}>
-      <option value="">{placeholder}</option>
-      {options.map(o => <option key={o} value={o}>{o}</option>)}
-    </select>
-  )
-}
-
-function FilterBar({ children, onClear }) {
-  return (
-    <Card style={{ padding: '16px 20px', marginBottom: 0 }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
-        <span style={{ fontSize: 11, fontWeight: 700, color: C.navy, textTransform: 'uppercase', letterSpacing: 1 }}>
-          🔍 Filtros
-        </span>
+    <Card style={{ padding: '14px 20px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 11, fontWeight: 700, color: C.navy, textTransform: 'uppercase', letterSpacing: 1 }}>
+            🔍 Filtros
+          </span>
+          {active && (
+            <span style={{ background: `rgba(0,180,216,0.12)`, color: C.cyan,
+              fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 20 }}>
+              {count} resultado{count !== 1 ? 's' : ''}
+            </span>
+          )}
+        </div>
         <button onClick={onClear} style={{ fontSize: 10, color: C.muted, background: 'none',
-          border: `1px solid ${C.border}`, borderRadius: 6, padding: '3px 10px', cursor: 'pointer' }}>
+          border: `1px solid ${C.border}`, borderRadius: 6, padding: '4px 12px',
+          cursor: 'pointer', whiteSpace: 'nowrap' }}>
           Limpiar filtros
         </button>
       </div>
-      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8 }}>
+      <div style={{
+        display: 'grid',
+        gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))',
+        gap: 8,
+        alignItems: 'end'
+      }}>
         {children}
       </div>
     </Card>
+  )
+}
+
+function FInput({ label, placeholder, value, setter }) {
+  return (
+    <div>
+      <div style={{ fontSize: 10, color: C.muted, marginBottom: 4, fontWeight: 600 }}>{label}</div>
+      <input placeholder={placeholder} value={value} onChange={e => setter(e.target.value)} style={inputStyle} />
+    </div>
+  )
+}
+
+function FSelect({ label, value, setter, options, placeholder }) {
+  return (
+    <div>
+      <div style={{ fontSize: 10, color: C.muted, marginBottom: 4, fontWeight: 600 }}>{label}</div>
+      <select value={value} onChange={e => setter(e.target.value)}
+        style={{ ...inputStyle, color: value ? '#1A2B4A' : '#5A7A9C' }}>
+        <option value="">{placeholder || 'Todos'}</option>
+        {options.map(o => <option key={o} value={o}>{o}</option>)}
+      </select>
+    </div>
+  )
+}
+
+function FDate({ label, value, setter }) {
+  return (
+    <div>
+      <div style={{ fontSize: 10, color: C.muted, marginBottom: 4, fontWeight: 600 }}>{label}</div>
+      <input type="date" value={value} onChange={e => setter(e.target.value)} style={inputStyle} />
+    </div>
   )
 }
 
@@ -161,7 +191,6 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab]   = useState('alistamiento')
 
-  // Filtros alistamiento
   const [fAliCliente,    setFAliCliente]    = useState('')
   const [fAliPlaca,      setFAliPlaca]      = useState('')
   const [fAliTecnico,    setFAliTecnico]    = useState('')
@@ -172,7 +201,6 @@ export default function App() {
   const [fAliDesde,      setFAliDesde]      = useState('')
   const [fAliHasta,      setFAliHasta]      = useState('')
 
-  // Filtros trazabilidad
   const [fTrazCliente,   setFTrazCliente]   = useState('')
   const [fTrazPlaca,     setFTrazPlaca]     = useState('')
   const [fTrazAlerta,    setFTrazAlerta]    = useState('')
@@ -203,7 +231,6 @@ export default function App() {
     load()
   }, [])
 
-  // Opciones únicas para selects
   const opTecnologia = useMemo(() => [...new Set(ali.map(r => r['TIPO DE TECNOLOGÍA']).filter(Boolean))].sort(), [ali])
   const opCiudad     = useMemo(() => [...new Set(ali.map(r => r['CIUDAD DONDE SE VA A INSTALAR']).filter(Boolean))].sort(), [ali])
   const opComercial  = useMemo(() => [...new Set(ali.map(r => r['COMERCIAL ENCARGADO']).filter(Boolean))].sort(), [ali])
@@ -211,7 +238,6 @@ export default function App() {
   const opEstadoAli  = useMemo(() => [...new Set(ali.map(r => r['ESTADO FINAL']).filter(Boolean))].sort(), [ali])
   const opEstadoTraz = useMemo(() => [...new Set(traz.map(r => r.estado_trazabilidad).filter(Boolean))].sort(), [traz])
 
-  // Filtrado alistamiento
   const aliFiltrada = useMemo(() => {
     return ali.filter(r => {
       const fecha = parseFechaDate(r['Marca temporal'])
@@ -231,7 +257,8 @@ export default function App() {
     })
   }, [ali, fAliCliente, fAliPlaca, fAliTecnico, fAliTecnologia, fAliCiudad, fAliComercial, fAliEstado, fAliDesde, fAliHasta])
 
-  // KPIs alistamiento (sobre datos filtrados)
+  const aliActive = !!(fAliCliente||fAliPlaca||fAliTecnico||fAliTecnologia||fAliCiudad||fAliComercial||fAliEstado||fAliDesde||fAliHasta)
+
   const totalAli     = aliFiltrada.length
   const aprobados    = aliFiltrada.filter(r => r['ESTADO FINAL'] === 'APROBADO').length
   const reutilizados = aliFiltrada.filter(r => r['CONDICIÓN DEL EQUIPO'] === 'USADO').length
@@ -296,7 +323,6 @@ export default function App() {
       .map(([name,value]) => ({name,value,pct:totalAli?((value/totalAli)*100).toFixed(1):'0'}))
   }, [aliFiltrada, totalAli])
 
-  // Filtrado trazabilidad
   const trazFiltrada = useMemo(() => {
     return traz.filter(r => {
       const desde = fTrazDesde ? new Date(fTrazDesde) : null
@@ -312,6 +338,8 @@ export default function App() {
       )
     })
   }, [traz, fTrazCliente, fTrazPlaca, fTrazAlerta, fTrazEstado, fTrazDesde, fTrazHasta])
+
+  const trazActive = !!(fTrazCliente||fTrazPlaca||fTrazAlerta||fTrazEstado||fTrazDesde||fTrazHasta)
 
   const kpiTraz = useMemo(() => {
     const completo  = trazFiltrada.filter(r => r.estado_trazabilidad === 'COMPLETO').length
@@ -345,8 +373,6 @@ export default function App() {
 
   return (
     <div style={{ minHeight:'100vh', background:C.surface }}>
-
-      {/* HEADER */}
       <div style={{ background:'#FFFFFF', borderBottom:`1px solid ${C.border}`,
         padding:'0 32px', position:'sticky', top:0, zIndex:100,
         boxShadow:'0 2px 8px rgba(30,111,191,0.08)' }}>
@@ -377,7 +403,6 @@ export default function App() {
 
       <div style={{ maxWidth:1400, margin:'0 auto', padding:'28px 32px' }}>
 
-        {/* ══════════ TAB ALISTAMIENTO ══════════ */}
         {tab === 'alistamiento' && (
           <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
             <div>
@@ -385,39 +410,22 @@ export default function App() {
               <p style={{ fontSize:12, color:C.muted, marginTop:2 }}>Responsable: María Jesus Correa Peinado · Último: {ultimoAli}</p>
             </div>
 
-            {/* FILTROS ALISTAMIENTO */}
-            <FilterBar onClear={() => {
-              setFAliCliente(''); setFAliPlaca(''); setFAliTecnico('');
-              setFAliTecnologia(''); setFAliCiudad(''); setFAliComercial('');
-              setFAliEstado(''); setFAliDesde(''); setFAliHasta('')
-            }}>
-              <FilterInput placeholder="Cliente..." value={fAliCliente} setter={setFAliCliente} />
-              <FilterInput placeholder="Placa..." value={fAliPlaca} setter={setFAliPlaca} />
-              <FilterSelect value={fAliTecnico} setter={setFAliTecnico} options={opTecnico} placeholder="Técnico..." />
-              <FilterSelect value={fAliTecnologia} setter={setFAliTecnologia} options={opTecnologia} placeholder="Tecnología..." />
-              <FilterSelect value={fAliCiudad} setter={setFAliCiudad} options={opCiudad} placeholder="Ciudad..." />
-              <FilterSelect value={fAliComercial} setter={setFAliComercial} options={opComercial} placeholder="Comercial..." />
-              <FilterSelect value={fAliEstado} setter={setFAliEstado} options={opEstadoAli} placeholder="Estado..." />
-              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <span style={{ fontSize:11, color:C.muted }}>Desde</span>
-                <input type="date" value={fAliDesde} onChange={e => setFAliDesde(e.target.value)}
-                  style={{ background:'#F4F6FA', border:`1px solid ${C.border}`, borderRadius:8,
-                    padding:'7px 10px', fontSize:11, color:C.text, outline:'none' }} />
-              </div>
-              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <span style={{ fontSize:11, color:C.muted }}>Hasta</span>
-                <input type="date" value={fAliHasta} onChange={e => setFAliHasta(e.target.value)}
-                  style={{ background:'#F4F6FA', border:`1px solid ${C.border}`, borderRadius:8,
-                    padding:'7px 10px', fontSize:11, color:C.text, outline:'none' }} />
-              </div>
-              {(fAliCliente||fAliPlaca||fAliTecnico||fAliTecnologia||fAliCiudad||fAliComercial||fAliEstado||fAliDesde||fAliHasta) && (
-                <span style={{ fontSize:11, color:C.blue, fontWeight:600, alignSelf:'center' }}>
-                  {aliFiltrada.length} resultado{aliFiltrada.length !== 1 ? 's' : ''}
-                </span>
-              )}
+            <FilterBar
+              onClear={() => { setFAliCliente(''); setFAliPlaca(''); setFAliTecnico('');
+                setFAliTecnologia(''); setFAliCiudad(''); setFAliComercial('');
+                setFAliEstado(''); setFAliDesde(''); setFAliHasta('') }}
+              count={aliFiltrada.length} active={aliActive}>
+              <FInput    label="Cliente"     placeholder="Buscar cliente..."  value={fAliCliente}    setter={setFAliCliente} />
+              <FInput    label="Placa"       placeholder="Buscar placa..."    value={fAliPlaca}      setter={setFAliPlaca} />
+              <FSelect   label="Técnico"     value={fAliTecnico}    setter={setFAliTecnico}    options={opTecnico}    placeholder="Todos" />
+              <FSelect   label="Tecnología"  value={fAliTecnologia} setter={setFAliTecnologia} options={opTecnologia} placeholder="Todas" />
+              <FSelect   label="Ciudad"      value={fAliCiudad}     setter={setFAliCiudad}     options={opCiudad}     placeholder="Todas" />
+              <FSelect   label="Comercial"   value={fAliComercial}  setter={setFAliComercial}  options={opComercial}  placeholder="Todos" />
+              <FSelect   label="Estado"      value={fAliEstado}     setter={setFAliEstado}     options={opEstadoAli}  placeholder="Todos" />
+              <FDate     label="Desde"       value={fAliDesde}      setter={setFAliDesde} />
+              <FDate     label="Hasta"       value={fAliHasta}      setter={setFAliHasta} />
             </FilterBar>
 
-            {/* KPIs */}
             <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:14 }}>
               <KPI label="Alistamientos" value={fmt(totalAli)} accent={C.cyan} />
               <KPI label="Aprobados" value={fmt(aprobados)} sub={pct(aprobados,totalAli)} accent={C.green} />
@@ -426,7 +434,6 @@ export default function App() {
               <KPI label="Tiempo Prom. (Min)" value={tiempoPromedio} accent={C.blue} />
             </div>
 
-            {/* Gráficas */}
             <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr', gap:16 }}>
               <Card>
                 <SectionTitle>Cantidad de Alistamientos por Mes</SectionTitle>
@@ -449,7 +456,7 @@ export default function App() {
                     <div key={i} style={{ display:'flex', alignItems:'center', gap:8 }}>
                       <span style={{ fontSize:11, color:C.muted, width:120, textAlign:'right' }}>{t.name}</span>
                       <div style={{ flex:1, height:16, background:C.s3, borderRadius:4, overflow:'hidden' }}>
-                        <div style={{ width:`${porTecnologia[0].value ? (t.value/porTecnologia[0].value)*100 : 0}%`,
+                        <div style={{ width:`${porTecnologia[0].value?(t.value/porTecnologia[0].value)*100:0}%`,
                           height:'100%', background:`linear-gradient(90deg, ${C.cyan}, ${C.blue})`, borderRadius:4 }} />
                       </div>
                       <span style={{ fontSize:11, color:C.text, width:30, textAlign:'right' }}>{t.value}</span>
@@ -535,7 +542,6 @@ export default function App() {
               </Card>
             </div>
 
-            {/* Tabla detalle alistamiento */}
             <Card>
               <SectionTitle>Detalle de Alistamientos</SectionTitle>
               <div style={{ overflowX:'auto' }}>
@@ -543,8 +549,7 @@ export default function App() {
                   <thead>
                     <tr style={{ borderBottom:`2px solid ${C.border}` }}>
                       {['Fecha','Cliente','Placa','Técnico','Tecnología','Ciudad','Comercial','Estado'].map(h => (
-                        <th key={h} style={{ padding:'10px 10px', textAlign:'left', color:C.navy,
-                          fontWeight:700, whiteSpace:'nowrap' }}>{h}</th>
+                        <th key={h} style={{ padding:'10px', textAlign:'left', color:C.navy, fontWeight:700, whiteSpace:'nowrap' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -580,7 +585,6 @@ export default function App() {
           </div>
         )}
 
-        {/* ══════════ TAB TRAZABILIDAD ══════════ */}
         {tab === 'trazabilidad' && (
           <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
             <div>
@@ -588,38 +592,20 @@ export default function App() {
               <p style={{ fontSize:12, color:C.muted, marginTop:2 }}>Cruce Movidesk · Alistamientos · Servicios I&M</p>
             </div>
 
-            {/* FILTROS TRAZABILIDAD */}
-            <FilterBar onClear={() => {
-              setFTrazCliente(''); setFTrazPlaca('');
-              setFTrazAlerta(''); setFTrazEstado('');
-              setFTrazDesde(''); setFTrazHasta('')
-            }}>
-              <FilterInput placeholder="Cliente..." value={fTrazCliente} setter={setFTrazCliente} />
-              <FilterInput placeholder="Placa..." value={fTrazPlaca} setter={setFTrazPlaca} />
-              <FilterSelect value={fTrazAlerta} setter={setFTrazAlerta}
-                options={['ROJO','AMARILLO','VERDE','GRIS']} placeholder="Alerta..." />
-              <FilterSelect value={fTrazEstado} setter={setFTrazEstado}
-                options={opEstadoTraz} placeholder="Estado..." />
-              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <span style={{ fontSize:11, color:C.muted }}>Desde</span>
-                <input type="date" value={fTrazDesde} onChange={e => setFTrazDesde(e.target.value)}
-                  style={{ background:'#F4F6FA', border:`1px solid ${C.border}`, borderRadius:8,
-                    padding:'7px 10px', fontSize:11, color:C.text, outline:'none' }} />
-              </div>
-              <div style={{ display:'flex', alignItems:'center', gap:6 }}>
-                <span style={{ fontSize:11, color:C.muted }}>Hasta</span>
-                <input type="date" value={fTrazHasta} onChange={e => setFTrazHasta(e.target.value)}
-                  style={{ background:'#F4F6FA', border:`1px solid ${C.border}`, borderRadius:8,
-                    padding:'7px 10px', fontSize:11, color:C.text, outline:'none' }} />
-              </div>
-              {(fTrazCliente||fTrazPlaca||fTrazAlerta||fTrazEstado||fTrazDesde||fTrazHasta) && (
-                <span style={{ fontSize:11, color:C.blue, fontWeight:600, alignSelf:'center' }}>
-                  {trazFiltrada.length} resultado{trazFiltrada.length !== 1 ? 's' : ''}
-                </span>
-              )}
+            <FilterBar
+              onClear={() => { setFTrazCliente(''); setFTrazPlaca('');
+                setFTrazAlerta(''); setFTrazEstado(''); setFTrazDesde(''); setFTrazHasta('') }}
+              count={trazFiltrada.length} active={trazActive}>
+              <FInput  label="Cliente"  placeholder="Buscar cliente..." value={fTrazCliente} setter={setFTrazCliente} />
+              <FInput  label="Placa"    placeholder="Buscar placa..."   value={fTrazPlaca}   setter={setFTrazPlaca} />
+              <FSelect label="Alerta"   value={fTrazAlerta} setter={setFTrazAlerta}
+                options={['ROJO','AMARILLO','VERDE','GRIS']} placeholder="Todas" />
+              <FSelect label="Estado"   value={fTrazEstado} setter={setFTrazEstado}
+                options={opEstadoTraz} placeholder="Todos" />
+              <FDate   label="Desde"    value={fTrazDesde}  setter={setFTrazDesde} />
+              <FDate   label="Hasta"    value={fTrazHasta}  setter={setFTrazHasta} />
             </FilterBar>
 
-            {/* KPIs Trazabilidad */}
             <div style={{ display:'grid', gridTemplateColumns:'repeat(6, 1fr)', gap:14 }}>
               <KPI label="Total registros" value={fmt(kpiTraz.total)} accent={C.cyan} />
               <KPI label="Trazabilidad completa" value={fmt(kpiTraz.completo)} sub={pct(kpiTraz.completo,kpiTraz.total)} accent={C.green} />
@@ -638,7 +624,7 @@ export default function App() {
                       <div style={{ width:10, height:10, borderRadius:2, background:COLORES_ESTADO[e.name]||C.muted, flexShrink:0 }} />
                       <span style={{ fontSize:11, color:C.muted, flex:1 }}>{e.name}</span>
                       <div style={{ width:120, height:14, background:C.s3, borderRadius:3, overflow:'hidden' }}>
-                        <div style={{ width:`${kpiTraz.total ? (e.value/kpiTraz.total)*100 : 0}%`, height:'100%',
+                        <div style={{ width:`${kpiTraz.total?(e.value/kpiTraz.total)*100:0}%`, height:'100%',
                           background:COLORES_ESTADO[e.name]||C.muted, borderRadius:3, opacity:0.8 }} />
                       </div>
                       <span style={{ fontSize:11, color:C.text, width:36, textAlign:'right', fontWeight:600 }}>{e.value}</span>
@@ -672,8 +658,7 @@ export default function App() {
                   <thead>
                     <tr style={{ borderBottom:`2px solid ${C.border}` }}>
                       {['Ticket','Placa','Cliente','Tecnología','Fecha Ali.','Fecha Inst.','Días','Estado','Alerta'].map(h => (
-                        <th key={h} style={{ padding:'10px 10px', textAlign:'left', color:C.navy,
-                          fontWeight:700, whiteSpace:'nowrap' }}>{h}</th>
+                        <th key={h} style={{ padding:'10px', textAlign:'left', color:C.navy, fontWeight:700, whiteSpace:'nowrap' }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
@@ -707,7 +692,7 @@ export default function App() {
 
       <div style={{ borderTop:`1px solid ${C.border}`, padding:'16px 32px',
         textAlign:'center', fontSize:10, color:C.muted, marginTop:24, background:'#fff' }}>
-        LAP Technologies · Dirección de Operaciones & Productividad
+        LAP Technologies · Dirección de Operaciones & Productividad · Dashboard construido con React + Supabase
       </div>
     </div>
   )

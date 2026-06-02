@@ -135,17 +135,34 @@ export default function App() {
   const [filtroAlerta, setFiltroAlerta]   = useState('')
 
   useEffect(() => {
-    async function load() {
-      const [{ data: a }, { data: t }] = await Promise.all([
-        supabase.from('alistamientos_preoperacionales').select('*'),
-        supabase.from('trazabilidad_alistamientos').select('*'),
-      ])
-      setAli(a || [])
-      setTraz(t || [])
-      setLoading(false)
+  async function fetchAll(table) {
+    let all = []
+    let from = 0
+    const PAGE = 1000
+    while (true) {
+      const { data, error } = await supabase
+        .from(table)
+        .select('*')
+        .range(from, from + PAGE - 1)
+      if (error || !data || data.length === 0) break
+      all = [...all, ...data]
+      if (data.length < PAGE) break
+      from += PAGE
     }
-    load()
-  }, [])
+    return all
+  }
+
+  async function load() {
+    const [a, t] = await Promise.all([
+      fetchAll('alistamientos_preoperacionales'),
+      fetchAll('trazabilidad_alistamientos'),
+    ])
+    setAli(a)
+    setTraz(t)
+    setLoading(false)
+  }
+  load()
+}, [])
 
   // ── KPIs Alistamiento ──────────────────────────────────────
   const totalAli    = ali.length

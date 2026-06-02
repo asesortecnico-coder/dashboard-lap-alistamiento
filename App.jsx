@@ -20,7 +20,6 @@ const MES_MAP = {
   '07':'Jul','08':'Ago','09':'Sep','10':'Oct','11':'Nov','12':'Dic'
 }
 
-// Coordenadas de ciudades colombianas
 const CIUDAD_COORDS = {
   'BOGOTA': [4.711, -74.0721], 'BOGOTÁ': [4.711, -74.0721],
   'MEDELLIN': [6.2442, -75.5812], 'MEDELLÍN': [6.2442, -75.5812],
@@ -179,12 +178,9 @@ function FDate({ label, value, setter }) {
   )
 }
 
-// Mapa con Leaflet cargado dinámicamente
 function MapaCiudades({ datos }) {
   const mapId = 'mapa-alistamientos'
-
   useEffect(() => {
-    // Cargar CSS de Leaflet
     if (!document.getElementById('leaflet-css')) {
       const link = document.createElement('link')
       link.id = 'leaflet-css'
@@ -192,87 +188,47 @@ function MapaCiudades({ datos }) {
       link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'
       document.head.appendChild(link)
     }
-
-    // Cargar JS de Leaflet
     const initMap = () => {
       const L = window.L
       const container = document.getElementById(mapId)
       if (!container || !L) return
-
-      // Limpiar mapa anterior
-      if (container._leaflet_id) {
-        container._leaflet_id = null
-        container.innerHTML = ''
-      }
-
-      const map = L.map(mapId, { zoomControl: true, scrollWheelZoom: false })
-        .setView([4.5, -74.0], 5.5)
-
-      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-        attribution: '© OpenStreetMap'
-      }).addTo(map)
-
+      if (container._leaflet_id) { container._leaflet_id = null; container.innerHTML = '' }
+      const map = L.map(mapId, { zoomControl: true, scrollWheelZoom: false }).setView([4.5, -74.0], 5.5)
+      L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map)
       const maxVal = Math.max(...datos.map(d => d.value), 1)
-
       datos.forEach(({ name, value }) => {
         const key = name.toUpperCase().trim()
         const coords = CIUDAD_COORDS[key]
         if (!coords) return
-
         const radio = 8 + (value / maxVal) * 28
-
         const circle = L.circleMarker(coords, {
-          radius: radio,
-          fillColor: '#00B4D8',
-          color: '#1D2B5F',
-          weight: 2,
-          opacity: 0.9,
-          fillOpacity: 0.7
+          radius: radio, fillColor: '#00B4D8', color: '#1D2B5F',
+          weight: 2, opacity: 0.9, fillOpacity: 0.7
         }).addTo(map)
-
-        circle.bindPopup(`
-          <div style="font-family:sans-serif;font-size:13px;min-width:120px">
-            <b style="color:#1D2B5F">${name}</b><br/>
-            <span style="color:#5A7A9C">Alistamientos:</span>
-            <b style="color:#00B4D8">${value}</b>
-          </div>
-        `)
+        circle.bindPopup(`<div style="font-family:sans-serif;font-size:13px;min-width:120px">
+          <b style="color:#1D2B5F">${name}</b><br/>
+          <span style="color:#5A7A9C">Alistamientos:</span>
+          <b style="color:#00B4D8">${value}</b></div>`)
       })
     }
-
-    if (window.L) {
-      initMap()
-    } else {
+    if (window.L) { initMap() } else {
       const script = document.createElement('script')
       script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
       script.onload = initMap
       document.head.appendChild(script)
     }
-
-    return () => {
-      const container = document.getElementById(mapId)
-      if (container) container.innerHTML = ''
-    }
+    return () => { const c = document.getElementById(mapId); if (c) c.innerHTML = '' }
   }, [datos])
-
-  return (
-    <div id={mapId} style={{
-      height: 380, borderRadius: 8, overflow: 'hidden',
-      border: `1px solid ${C.border}`, zIndex: 0
-    }} />
-  )
+  return <div id={mapId} style={{ height: 380, borderRadius: 8, overflow: 'hidden', border: `1px solid ${C.border}`, zIndex: 0 }} />
 }
 
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background: '#fff', border: `1px solid ${C.border}`,
-      borderRadius: 8, padding: '8px 12px', fontSize: 12, color: C.text,
-      boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
+    <div style={{ background: '#fff', border: `1px solid ${C.border}`, borderRadius: 8,
+      padding: '8px 12px', fontSize: 12, color: C.text, boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
       <p style={{ color: C.muted, marginBottom: 4 }}>{label}</p>
-      {payload.map((p, i) => (
-        <p key={i} style={{ color: p.color }}>{p.name}: <b>{fmt(p.value)}</b></p>
-      ))}
+      {payload.map((p, i) => <p key={i} style={{ color: p.color }}>{p.name}: <b>{fmt(p.value)}</b></p>)}
     </div>
   )
 }
@@ -285,9 +241,31 @@ function AlertBadge({ nivel }) {
     GRIS:     { bg: 'rgba(107,114,128,0.12)', color: '#6B7280' },
   }
   const s = map[nivel] || map.GRIS
+  return <span style={{ background: s.bg, color: s.color, padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700 }}>{nivel || 'GRIS'}</span>
+}
+
+function TopClientes({ datos }) {
+  if (!datos.length) return <p style={{ color: C.muted, fontSize: 12 }}>Sin datos</p>
+  const max = datos[0].value
   return (
-    <span style={{ background: s.bg, color: s.color,
-      padding: '2px 8px', borderRadius: 20, fontSize: 10, fontWeight: 700 }}>{nivel || 'GRIS'}</span>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
+      {datos.map((c, i) => (
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <span style={{ fontSize: 10, color: C.muted, width: 22, textAlign: 'right', fontWeight: 700 }}>{i+1}.</span>
+          <span style={{ fontSize: 10, color: C.text, width: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>{c.name}</span>
+          <div style={{ flex: 1, height: 18, background: C.s3, borderRadius: 4, overflow: 'hidden' }}>
+            <div style={{
+              width: `${max ? (c.value / max) * 100 : 0}%`, height: '100%', borderRadius: 4,
+              background: i === 0 ? `linear-gradient(90deg, ${C.cyan}, ${C.blue})`
+                : i < 3 ? `linear-gradient(90deg, ${C.blue}, #3b82f6)`
+                : `linear-gradient(90deg, #3b82f6, ${C.cyanL})`
+            }} />
+          </div>
+          <span style={{ fontSize: 11, color: C.navy, fontWeight: 700, width: 28, textAlign: 'right' }}>{c.value}</span>
+          <span style={{ fontSize: 10, color: C.muted, width: 38, textAlign: 'right' }}>{c.pct}%</span>
+        </div>
+      ))}
+    </div>
   )
 }
 
@@ -346,24 +324,22 @@ export default function App() {
   const opEstadoAli  = useMemo(() => [...new Set(ali.map(r => r['ESTADO FINAL']).filter(Boolean))].sort(), [ali])
   const opEstadoTraz = useMemo(() => [...new Set(traz.map(r => r.estado_trazabilidad).filter(Boolean))].sort(), [traz])
 
-  const aliFiltrada = useMemo(() => {
-    return ali.filter(r => {
-      const fecha = parseFechaDate(r['Marca temporal'])
-      const desde = fAliDesde ? new Date(fAliDesde) : null
-      const hasta = fAliHasta ? new Date(fAliHasta) : null
-      return (
-        (!fAliCliente    || (r['NOMBRE CLIENTE']||'').toLowerCase().includes(fAliCliente.toLowerCase())) &&
-        (!fAliPlaca      || (r['IDENTIFICACIÓN DEL ACTIVO (PLACA)']||'').toLowerCase().includes(fAliPlaca.toLowerCase())) &&
-        (!fAliTecnico    || r['RESPONSABLE'] === fAliTecnico) &&
-        (!fAliTecnologia || r['TIPO DE TECNOLOGÍA'] === fAliTecnologia) &&
-        (!fAliCiudad     || r['CIUDAD DONDE SE VA A INSTALAR'] === fAliCiudad) &&
-        (!fAliComercial  || r['COMERCIAL ENCARGADO'] === fAliComercial) &&
-        (!fAliEstado     || r['ESTADO FINAL'] === fAliEstado) &&
-        (!desde || !fecha || fecha >= desde) &&
-        (!hasta || !fecha || fecha <= hasta)
-      )
-    })
-  }, [ali, fAliCliente, fAliPlaca, fAliTecnico, fAliTecnologia, fAliCiudad, fAliComercial, fAliEstado, fAliDesde, fAliHasta])
+  const aliFiltrada = useMemo(() => ali.filter(r => {
+    const fecha = parseFechaDate(r['Marca temporal'])
+    const desde = fAliDesde ? new Date(fAliDesde) : null
+    const hasta = fAliHasta ? new Date(fAliHasta) : null
+    return (
+      (!fAliCliente    || (r['NOMBRE CLIENTE']||'').toLowerCase().includes(fAliCliente.toLowerCase())) &&
+      (!fAliPlaca      || (r['IDENTIFICACIÓN DEL ACTIVO (PLACA)']||'').toLowerCase().includes(fAliPlaca.toLowerCase())) &&
+      (!fAliTecnico    || r['RESPONSABLE'] === fAliTecnico) &&
+      (!fAliTecnologia || r['TIPO DE TECNOLOGÍA'] === fAliTecnologia) &&
+      (!fAliCiudad     || r['CIUDAD DONDE SE VA A INSTALAR'] === fAliCiudad) &&
+      (!fAliComercial  || r['COMERCIAL ENCARGADO'] === fAliComercial) &&
+      (!fAliEstado     || r['ESTADO FINAL'] === fAliEstado) &&
+      (!desde || !fecha || fecha >= desde) &&
+      (!hasta || !fecha || fecha <= hasta)
+    )
+  }), [ali, fAliCliente, fAliPlaca, fAliTecnico, fAliTecnologia, fAliCiudad, fAliComercial, fAliEstado, fAliDesde, fAliHasta])
 
   const aliActive = !!(fAliCliente||fAliPlaca||fAliTecnico||fAliTecnologia||fAliCiudad||fAliComercial||fAliEstado||fAliDesde||fAliHasta)
 
@@ -418,7 +394,6 @@ export default function App() {
       .map(([name,value]) => ({name,value,pct:totalAli?((value/totalAli)*100).toFixed(1):'0'}))
   }, [aliFiltrada, totalAli])
 
-  // Top 10 clientes para barras horizontales
   const porCliente = useMemo(() => {
     const map = {}
     aliFiltrada.forEach(r => { const c = r['NOMBRE CLIENTE']||'N/A'; map[c]=(map[c]||0)+1 })
@@ -433,34 +408,26 @@ export default function App() {
       .map(([name,value]) => ({name,value,pct:totalAli?((value/totalAli)*100).toFixed(1):'0'}))
   }, [aliFiltrada, totalAli])
 
-  // Datos para mapa (todas las ciudades con coords)
   const datosMapa = useMemo(() => {
     const map = {}
-    aliFiltrada.forEach(r => {
-      const c = (r['CIUDAD DONDE SE VA A INSTALAR']||'').trim()
-      if (c) map[c] = (map[c]||0)+1
-    })
-    return Object.entries(map)
-      .filter(([name]) => CIUDAD_COORDS[name.toUpperCase().trim()])
-      .sort((a,b) => b[1]-a[1])
-      .map(([name,value]) => ({name,value}))
+    aliFiltrada.forEach(r => { const c = (r['CIUDAD DONDE SE VA A INSTALAR']||'').trim(); if (c) map[c]=(map[c]||0)+1 })
+    return Object.entries(map).filter(([name]) => CIUDAD_COORDS[name.toUpperCase().trim()])
+      .sort((a,b) => b[1]-a[1]).map(([name,value]) => ({name,value}))
   }, [aliFiltrada])
 
-  const trazFiltrada = useMemo(() => {
-    return traz.filter(r => {
-      const desde = fTrazDesde ? new Date(fTrazDesde) : null
-      const hasta = fTrazHasta ? new Date(fTrazHasta) : null
-      const fecha = r.fecha_alistamiento ? new Date(r.fecha_alistamiento) : null
-      return (
-        (!fTrazCliente || (r.cliente||'').toLowerCase().includes(fTrazCliente.toLowerCase())) &&
-        (!fTrazPlaca   || (r.placa||'').toLowerCase().includes(fTrazPlaca.toLowerCase())) &&
-        (!fTrazAlerta  || r.nivel_alerta === fTrazAlerta) &&
-        (!fTrazEstado  || r.estado_trazabilidad === fTrazEstado) &&
-        (!desde || !fecha || fecha >= desde) &&
-        (!hasta || !fecha || fecha <= hasta)
-      )
-    })
-  }, [traz, fTrazCliente, fTrazPlaca, fTrazAlerta, fTrazEstado, fTrazDesde, fTrazHasta])
+  const trazFiltrada = useMemo(() => traz.filter(r => {
+    const desde = fTrazDesde ? new Date(fTrazDesde) : null
+    const hasta = fTrazHasta ? new Date(fTrazHasta) : null
+    const fecha = r.fecha_alistamiento ? new Date(r.fecha_alistamiento) : null
+    return (
+      (!fTrazCliente || (r.cliente||'').toLowerCase().includes(fTrazCliente.toLowerCase())) &&
+      (!fTrazPlaca   || (r.placa||'').toLowerCase().includes(fTrazPlaca.toLowerCase())) &&
+      (!fTrazAlerta  || r.nivel_alerta === fTrazAlerta) &&
+      (!fTrazEstado  || r.estado_trazabilidad === fTrazEstado) &&
+      (!desde || !fecha || fecha >= desde) &&
+      (!hasta || !fecha || fecha <= hasta)
+    )
+  }), [traz, fTrazCliente, fTrazPlaca, fTrazAlerta, fTrazEstado, fTrazDesde, fTrazHasta])
 
   const trazActive = !!(fTrazCliente||fTrazPlaca||fTrazAlerta||fTrazEstado||fTrazDesde||fTrazHasta)
 
@@ -471,6 +438,15 @@ export default function App() {
     const rojos     = trazFiltrada.filter(r => r.nivel_alerta === 'ROJO').length
     const amarillos = trazFiltrada.filter(r => r.nivel_alerta === 'AMARILLO').length
     return { completo, sinAli, pendiente, rojos, amarillos, total: trazFiltrada.length }
+  }, [trazFiltrada])
+
+  // ── Top 10 clientes trazabilidad ──────────────────────────
+  const porClienteTraz = useMemo(() => {
+    const map = {}
+    trazFiltrada.forEach(r => { const c = r.cliente||'N/A'; map[c]=(map[c]||0)+1 })
+    const total = trazFiltrada.length
+    return Object.entries(map).sort((a,b) => b[1]-a[1]).slice(0,10)
+      .map(([name,value]) => ({name,value,pct:total?((value/total)*100).toFixed(1):'0'}))
   }, [trazFiltrada])
 
   const estadosTraz = useMemo(() => {
@@ -526,6 +502,7 @@ export default function App() {
 
       <div style={{ maxWidth:1400, margin:'0 auto', padding:'28px 32px' }}>
 
+        {/* ══════════ ALISTAMIENTO ══════════ */}
         {tab === 'alistamiento' && (
           <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
             <div>
@@ -533,20 +510,19 @@ export default function App() {
               <p style={{ fontSize:12, color:C.muted, marginTop:2 }}>Responsable: María Jesus Correa Peinado · Último: {ultimoAli}</p>
             </div>
 
-            <FilterBar
-              onClear={() => { setFAliCliente(''); setFAliPlaca(''); setFAliTecnico('');
-                setFAliTecnologia(''); setFAliCiudad(''); setFAliComercial('');
-                setFAliEstado(''); setFAliDesde(''); setFAliHasta('') }}
+            <FilterBar onClear={() => { setFAliCliente(''); setFAliPlaca(''); setFAliTecnico('');
+              setFAliTecnologia(''); setFAliCiudad(''); setFAliComercial('');
+              setFAliEstado(''); setFAliDesde(''); setFAliHasta('') }}
               count={aliFiltrada.length} active={aliActive}>
-              <FInput    label="Cliente"       placeholder="Buscar cliente..."  value={fAliCliente}    setter={setFAliCliente} />
-              <FInput    label="Placa"         placeholder="Buscar placa..."    value={fAliPlaca}      setter={setFAliPlaca} />
-              <FSelect   label="Responsable"   value={fAliTecnico}    setter={setFAliTecnico}    options={opTecnico}    placeholder="Todos" />
-              <FSelect   label="Tecnología"    value={fAliTecnologia} setter={setFAliTecnologia} options={opTecnologia} placeholder="Todas" />
-              <FSelect   label="Ciudad"        value={fAliCiudad}     setter={setFAliCiudad}     options={opCiudad}     placeholder="Todas" />
-              <FSelect   label="Comercial"     value={fAliComercial}  setter={setFAliComercial}  options={opComercial}  placeholder="Todos" />
-              <FSelect   label="Estado"        value={fAliEstado}     setter={setFAliEstado}     options={opEstadoAli}  placeholder="Todos" />
-              <FDate     label="Desde"         value={fAliDesde}      setter={setFAliDesde} />
-              <FDate     label="Hasta"         value={fAliHasta}      setter={setFAliHasta} />
+              <FInput  label="Cliente"     placeholder="Buscar cliente..." value={fAliCliente}    setter={setFAliCliente} />
+              <FInput  label="Placa"       placeholder="Buscar placa..."   value={fAliPlaca}      setter={setFAliPlaca} />
+              <FSelect label="Responsable" value={fAliTecnico}    setter={setFAliTecnico}    options={opTecnico}    placeholder="Todos" />
+              <FSelect label="Tecnología"  value={fAliTecnologia} setter={setFAliTecnologia} options={opTecnologia} placeholder="Todas" />
+              <FSelect label="Ciudad"      value={fAliCiudad}     setter={setFAliCiudad}     options={opCiudad}     placeholder="Todas" />
+              <FSelect label="Comercial"   value={fAliComercial}  setter={setFAliComercial}  options={opComercial}  placeholder="Todos" />
+              <FSelect label="Estado"      value={fAliEstado}     setter={setFAliEstado}     options={opEstadoAli}  placeholder="Todos" />
+              <FDate   label="Desde"       value={fAliDesde}      setter={setFAliDesde} />
+              <FDate   label="Hasta"       value={fAliHasta}      setter={setFAliHasta} />
             </FilterBar>
 
             <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:14 }}>
@@ -557,7 +533,6 @@ export default function App() {
               <KPI label="Tiempo Prom. (Min)" value={tiempoPromedio} accent={C.blue} />
             </div>
 
-            {/* Mes + Tecnología */}
             <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr', gap:16 }}>
               <Card>
                 <SectionTitle>Cantidad de Alistamientos por Mes</SectionTitle>
@@ -580,7 +555,7 @@ export default function App() {
                     <div key={i} style={{ display:'flex', alignItems:'center', gap:8 }}>
                       <span style={{ fontSize:11, color:C.muted, width:120, textAlign:'right' }}>{t.name}</span>
                       <div style={{ flex:1, height:16, background:C.s3, borderRadius:4, overflow:'hidden' }}>
-                        <div style={{ width:`${porTecnologia[0].value?(t.value/porTecnologia[0].value)*100:0}%`,
+                        <div style={{ width:`${porTecnologia[0]?.value?(t.value/porTecnologia[0].value)*100:0}%`,
                           height:'100%', background:`linear-gradient(90deg, ${C.cyan}, ${C.blue})`, borderRadius:4 }} />
                       </div>
                       <span style={{ fontSize:11, color:C.text, width:30, textAlign:'right' }}>{t.value}</span>
@@ -590,7 +565,6 @@ export default function App() {
               </Card>
             </div>
 
-            {/* Operador + Ciudad + Condición */}
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1.5fr 1fr', gap:16 }}>
               <Card>
                 <SectionTitle>Empresa de Telefonía</SectionTitle>
@@ -611,8 +585,7 @@ export default function App() {
                     <div key={i} style={{ display:'flex', alignItems:'center', gap:8 }}>
                       <span style={{ fontSize:10, color:C.muted, width:100, textAlign:'right' }}>{c.name}</span>
                       <div style={{ flex:1, height:14, background:C.s3, borderRadius:3, overflow:'hidden' }}>
-                        <div style={{ width:`${c.pct}%`, height:'100%',
-                          background:`linear-gradient(90deg, ${C.blue}, ${C.cyan})`, borderRadius:3 }} />
+                        <div style={{ width:`${c.pct}%`, height:'100%', background:`linear-gradient(90deg, ${C.blue}, ${C.cyan})`, borderRadius:3 }} />
                       </div>
                       <span style={{ fontSize:10, color:C.muted, width:40 }}>{c.pct}%</span>
                     </div>
@@ -634,7 +607,6 @@ export default function App() {
               </Card>
             </div>
 
-            {/* Mapa + Distribución Clientes */}
             <div style={{ display:'grid', gridTemplateColumns:'1.3fr 1fr', gap:16 }}>
               <Card>
                 <SectionTitle>Distribución Geográfica de Alistamientos</SectionTitle>
@@ -645,39 +617,10 @@ export default function App() {
               </Card>
               <Card>
                 <SectionTitle>Top 10 Clientes con Más Alistamientos</SectionTitle>
-                <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:4 }}>
-                  {porCliente.map((c,i) => (
-                    <div key={i} style={{ display:'flex', alignItems:'center', gap:8 }}>
-                      <span style={{ fontSize:10, color:C.muted, width:22, textAlign:'right', fontWeight:700 }}>
-                        {i+1}.
-                      </span>
-                      <span style={{ fontSize:10, color:C.text, width:140, overflow:'hidden',
-                        textOverflow:'ellipsis', whiteSpace:'nowrap', flexShrink:0 }}>{c.name}</span>
-                      <div style={{ flex:1, height:18, background:C.s3, borderRadius:4, overflow:'hidden' }}>
-                        <div style={{
-                          width:`${porCliente[0].value?(c.value/porCliente[0].value)*100:0}%`,
-                          height:'100%',
-                          background: i===0
-                            ? `linear-gradient(90deg, ${C.cyan}, ${C.blue})`
-                            : i < 3
-                            ? `linear-gradient(90deg, ${C.blue}, #3b82f6)`
-                            : `linear-gradient(90deg, #3b82f6, ${C.cyanL})`,
-                          borderRadius:4
-                        }} />
-                      </div>
-                      <span style={{ fontSize:11, color:C.navy, fontWeight:700, width:28, textAlign:'right' }}>
-                        {c.value}
-                      </span>
-                      <span style={{ fontSize:10, color:C.muted, width:38, textAlign:'right' }}>
-                        {c.pct}%
-                      </span>
-                    </div>
-                  ))}
-                </div>
+                <TopClientes datos={porCliente} />
               </Card>
             </div>
 
-            {/* Comercial */}
             <Card>
               <SectionTitle>Comercial Encargado</SectionTitle>
               <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
@@ -688,15 +631,13 @@ export default function App() {
                       <span style={{ fontSize:11, color:C.blue, fontWeight:600 }}>{c.value} · {c.pct}%</span>
                     </div>
                     <div style={{ height:6, background:C.s3, borderRadius:3, overflow:'hidden' }}>
-                      <div style={{ width:`${c.pct}%`, height:'100%',
-                        background:`linear-gradient(90deg, ${C.cyan}, ${C.blue})`, borderRadius:3 }} />
+                      <div style={{ width:`${c.pct}%`, height:'100%', background:`linear-gradient(90deg, ${C.cyan}, ${C.blue})`, borderRadius:3 }} />
                     </div>
                   </div>
                 ))}
               </div>
             </Card>
 
-            {/* Tabla detalle */}
             <Card>
               <SectionTitle>Detalle de Alistamientos</SectionTitle>
               <div style={{ overflowX:'auto' }}>
@@ -710,8 +651,7 @@ export default function App() {
                   </thead>
                   <tbody>
                     {aliFiltrada.slice(0,100).map((r,i) => (
-                      <tr key={i} style={{ borderBottom:`1px solid ${C.border}`,
-                        background: i%2===0 ? '#FFFFFF' : '#F8FAFC' }}>
+                      <tr key={i} style={{ borderBottom:`1px solid ${C.border}`, background: i%2===0?'#FFFFFF':'#F8FAFC' }}>
                         <td style={{ padding:'7px 10px', color:C.muted }}>{String(r['Marca temporal']||'').split(' ')[0]}</td>
                         <td style={{ padding:'7px 10px', color:C.text, maxWidth:140, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r['NOMBRE CLIENTE']}</td>
                         <td style={{ padding:'7px 10px', color:C.blue, fontWeight:600 }}>{r['IDENTIFICACIÓN DEL ACTIVO (PLACA)']}</td>
@@ -721,8 +661,8 @@ export default function App() {
                         <td style={{ padding:'7px 10px', color:C.muted }}>{r['COMERCIAL ENCARGADO']}</td>
                         <td style={{ padding:'7px 10px' }}>
                           <span style={{
-                            background: r['ESTADO FINAL']==='APROBADO' ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
-                            color: r['ESTADO FINAL']==='APROBADO' ? '#059669' : '#DC2626',
+                            background: r['ESTADO FINAL']==='APROBADO'?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)',
+                            color: r['ESTADO FINAL']==='APROBADO'?'#059669':'#DC2626',
                             padding:'2px 8px', borderRadius:20, fontSize:10, fontWeight:700
                           }}>{r['ESTADO FINAL']}</span>
                         </td>
@@ -740,6 +680,7 @@ export default function App() {
           </div>
         )}
 
+        {/* ══════════ TRAZABILIDAD ══════════ */}
         {tab === 'trazabilidad' && (
           <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
             <div>
@@ -747,50 +688,30 @@ export default function App() {
               <p style={{ fontSize:12, color:C.muted, marginTop:2 }}>Cruce Movidesk · Alistamientos · Servicios I&M</p>
             </div>
 
-            <FilterBar
-              onClear={() => { setFTrazCliente(''); setFTrazPlaca('');
-                setFTrazAlerta(''); setFTrazEstado(''); setFTrazDesde(''); setFTrazHasta('') }}
+            <FilterBar onClear={() => { setFTrazCliente(''); setFTrazPlaca('');
+              setFTrazAlerta(''); setFTrazEstado(''); setFTrazDesde(''); setFTrazHasta('') }}
               count={trazFiltrada.length} active={trazActive}>
-              <FInput  label="Cliente"  placeholder="Buscar cliente..." value={fTrazCliente} setter={setFTrazCliente} />
-              <FInput  label="Placa"    placeholder="Buscar placa..."   value={fTrazPlaca}   setter={setFTrazPlaca} />
-              <FSelect label="Alerta"   value={fTrazAlerta} setter={setFTrazAlerta}
-                options={['ROJO','AMARILLO','VERDE','GRIS']} placeholder="Todas" />
-              <FSelect label="Estado"   value={fTrazEstado} setter={setFTrazEstado}
-                options={opEstadoTraz} placeholder="Todos" />
-              <FDate   label="Desde"    value={fTrazDesde}  setter={setFTrazDesde} />
-              <FDate   label="Hasta"    value={fTrazHasta}  setter={setFTrazHasta} />
+              <FInput  label="Cliente" placeholder="Buscar cliente..." value={fTrazCliente} setter={setFTrazCliente} />
+              <FInput  label="Placa"   placeholder="Buscar placa..."   value={fTrazPlaca}   setter={setFTrazPlaca} />
+              <FSelect label="Alerta"  value={fTrazAlerta} setter={setFTrazAlerta} options={['ROJO','AMARILLO','VERDE','GRIS']} placeholder="Todas" />
+              <FSelect label="Estado"  value={fTrazEstado} setter={setFTrazEstado} options={opEstadoTraz} placeholder="Todos" />
+              <FDate   label="Desde"   value={fTrazDesde}  setter={setFTrazDesde} />
+              <FDate   label="Hasta"   value={fTrazHasta}  setter={setFTrazHasta} />
             </FilterBar>
 
             <div style={{ display:'grid', gridTemplateColumns:'repeat(6, 1fr)', gap:14 }}>
-              <KPI label="Total registros" value={fmt(kpiTraz.total)} accent={C.cyan} />
+              <KPI label="Total registros"      value={fmt(kpiTraz.total)}    accent={C.cyan} />
               <KPI label="Trazabilidad completa" value={fmt(kpiTraz.completo)} sub={pct(kpiTraz.completo,kpiTraz.total)} accent={C.green} />
-              <KPI label="Sin alistamiento" value={fmt(kpiTraz.sinAli)} sub={pct(kpiTraz.sinAli,kpiTraz.total)} accent={C.red} />
-              <KPI label="Pendiente instalación" value={fmt(kpiTraz.pendiente)} sub={pct(kpiTraz.pendiente,kpiTraz.total)} accent={C.yellow} />
-              <KPI label="Alerta ROJA" value={fmt(kpiTraz.rojos)} accent={C.red} />
-              <KPI label="Alerta AMARILLA" value={fmt(kpiTraz.amarillos)} accent={C.yellow} />
+              <KPI label="Sin alistamiento"      value={fmt(kpiTraz.sinAli)}   sub={pct(kpiTraz.sinAli,kpiTraz.total)}   accent={C.red} />
+              <KPI label="Pendiente instalación" value={fmt(kpiTraz.pendiente)}sub={pct(kpiTraz.pendiente,kpiTraz.total)} accent={C.yellow} />
+              <KPI label="Alerta ROJA"           value={fmt(kpiTraz.rojos)}    accent={C.red} />
+              <KPI label="Alerta AMARILLA"       value={fmt(kpiTraz.amarillos)} accent={C.yellow} />
             </div>
 
-{/* Top clientes trazabilidad */}
+            {/* Top clientes trazabilidad */}
             <Card>
               <SectionTitle>Top 10 Clientes con Más Registros</SectionTitle>
-              <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:4 }}>
-                {useMemo(() => {
-                  const map = {}
-                  trazFiltrada.forEach(r => { const c = r.cliente||'N/A'; map[c]=(map[c]||0)+1 })
-                  return Object.entries(map).sort((a,b) => b[1]-a[1]).slice(0,10)
-                    .map(([name,value],i) => ({name,value,pct:kpiTraz.total?((value/kpiTraz.total)*100).toFixed(1):'0',i}))
-                }, [trazFiltrada,kpiTraz]).map((c,i) => (
-                  <div key={i} style={{ display:'flex', alignItems:'center', gap:8 }}>
-                    <span style={{ fontSize:10, color:C.muted, width:22, textAlign:'right', fontWeight:700 }}>{i+1}.</span>
-                    <span style={{ fontSize:10, color:C.text, width:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flexShrink:0 }}>{c.name}</span>
-                    <div style={{ flex:1, height:18, background:C.s3, borderRadius:4, overflow:'hidden' }}>
-                      <div style={{ width:`${c.pct}%`, height:'100%', background:`linear-gradient(90deg, ${C.cyan}, ${C.blue})`, borderRadius:4 }} />
-                    </div>
-                    <span style={{ fontSize:11, color:C.navy, fontWeight:700, width:28, textAlign:'right' }}>{c.value}</span>
-                    <span style={{ fontSize:10, color:C.muted, width:38, textAlign:'right' }}>{c.pct}%</span>
-                  </div>
-                ))}
-              </div>
+              <TopClientes datos={porClienteTraz} />
             </Card>
 
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
@@ -842,8 +763,7 @@ export default function App() {
                   </thead>
                   <tbody>
                     {trazFiltrada.slice(0,100).map((r,i) => (
-                      <tr key={i} style={{ borderBottom:`1px solid ${C.border}`,
-                        background: i%2===0 ? '#FFFFFF' : '#F8FAFC' }}>
+                      <tr key={i} style={{ borderBottom:`1px solid ${C.border}`, background: i%2===0?'#FFFFFF':'#F8FAFC' }}>
                         <td style={{ padding:'7px 10px', color:C.blue, fontWeight:600 }}>{r.ticket}</td>
                         <td style={{ padding:'7px 10px', color:C.text }}>{r.placa}</td>
                         <td style={{ padding:'7px 10px', color:C.text, maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.cliente}</td>
@@ -870,7 +790,7 @@ export default function App() {
 
       <div style={{ borderTop:`1px solid ${C.border}`, padding:'16px 32px',
         textAlign:'center', fontSize:10, color:C.muted, marginTop:24, background:'#fff' }}>
-        LAP Technologies · Dirección de Operaciones & Productividad
+        LAP Technologies · Dirección de Operaciones & Productividad · Dashboard construido con React + Supabase
       </div>
     </div>
   )

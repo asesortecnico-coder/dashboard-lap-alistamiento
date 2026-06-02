@@ -692,7 +692,7 @@ export default function App() {
 
       <div style={{ borderTop:`1px solid ${C.border}`, padding:'16px 32px',
         textAlign:'center', fontSize:10, color:C.muted, marginTop:24, background:'#fff' }}>
-        LAP Technologies · Dirección de Operaciones & Productividad · Dashboard construido con React + Supabase
+        LAP Technologies · Dirección de Operaciones & Productividad
       </div>
     </div>
   )

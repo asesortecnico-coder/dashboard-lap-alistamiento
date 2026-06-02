@@ -326,11 +326,12 @@ const ultimoAli = useMemo(() => {
               borderRadius: 8,
               display: 'flex', alignItems: 'center', justifyContent: 'center',
               fontSize: 16, fontWeight: 800, color: '#fff'
-            }}<img
-  src="https://kvmheirckuhngouanphl.supabase.co/storage/v1/object/public/Control%20de%20Alistamiento/Mesa%20de%20trabajo%202-8.png"
-  alt="LAP Technologies"
-  style={{ height: 40, width: 'auto', objectFit: 'contain' }}
-/>
+            }}/>
+            <img
+              src="https://kvmheirckuhngouanphl.supabase.co/storage/v1/object/public/Control%20de%20Alistamiento/Mesa%20de%20trabajo%202-8.png"
+              alt="LAP Technologies"
+              style={{ height: 40, width: 'auto', objectFit: 'contain' }}
+            />
 
           <div style={{ display: 'flex', gap: 4 }}>
             {[

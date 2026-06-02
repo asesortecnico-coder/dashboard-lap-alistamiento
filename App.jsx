@@ -6,10 +6,19 @@ import {
 } from 'recharts'
 
 const C = {
-  navy:    '#1D2B5F', blue:    '#1E6FBF', cyan:    '#00B4D8',
-  cyanL:   '#90E0EF', surface: '#111D35', s2:      '#1A2B4A',
-  s3:      '#223356', border:  'rgba(0,180,216,0.18)', text:    '#E8F4FD',
-  muted:   '#7B9EC4', green:   '#10B981', yellow:  '#F59E0B', red: '#EF4444',
+  navy:    '#1D2B5F',
+  blue:    '#1E6FBF',
+  cyan:    '#00B4D8',
+  cyanL:   '#90E0EF',
+  surface: '#F4F6FA',
+  s2:      '#FFFFFF',
+  s3:      '#E8EDF5',
+  border:  'rgba(30,111,191,0.15)',
+  text:    '#1A2B4A',
+  muted:   '#5A7A9C',
+  green:   '#10B981',
+  yellow:  '#F59E0B',
+  red:     '#EF4444',
 }
 
 const fmt = n => (n ?? 0).toLocaleString('es-CO')
@@ -45,7 +54,8 @@ function KPI({ label, value, sub, accent = C.cyan }) {
   return (
     <div style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12,
       padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 4,
-      position: 'relative', overflow: 'hidden' }}>
+      position: 'relative', overflow: 'hidden',
+      boxShadow: '0 2px 8px rgba(30,111,191,0.08)' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3,
         background: `linear-gradient(90deg, ${accent}, transparent)` }} />
       <span style={{ fontSize: 11, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</span>
@@ -69,7 +79,7 @@ function SectionTitle({ children }) {
 function Card({ children, style = {} }) {
   return (
     <div style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12,
-      padding: '20px 20px 16px', ...style }}>
+      padding: '20px 20px 16px', boxShadow: '0 2px 8px rgba(30,111,191,0.08)', ...style }}>
       {children}
     </div>
   )
@@ -78,8 +88,9 @@ function Card({ children, style = {} }) {
 const CustomTooltip = ({ active, payload, label }) => {
   if (!active || !payload?.length) return null
   return (
-    <div style={{ background: C.navy, border: `1px solid ${C.border}`,
-      borderRadius: 8, padding: '8px 12px', fontSize: 12, color: C.text }}>
+    <div style={{ background: '#fff', border: `1px solid ${C.border}`,
+      borderRadius: 8, padding: '8px 12px', fontSize: 12, color: C.text,
+      boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
       <p style={{ color: C.muted, marginBottom: 4 }}>{label}</p>
       {payload.map((p, i) => (
         <p key={i} style={{ color: p.color }}>{p.name}: <b>{fmt(p.value)}</b></p>
@@ -90,10 +101,10 @@ const CustomTooltip = ({ active, payload, label }) => {
 
 function AlertBadge({ nivel }) {
   const map = {
-    ROJO:     { bg: 'rgba(239,68,68,0.15)',   color: '#EF4444' },
-    AMARILLO: { bg: 'rgba(245,158,11,0.15)',  color: '#F59E0B' },
-    VERDE:    { bg: 'rgba(16,185,129,0.15)',  color: '#10B981' },
-    GRIS:     { bg: 'rgba(107,114,128,0.15)', color: '#9CA3AF' },
+    ROJO:     { bg: 'rgba(239,68,68,0.12)',   color: '#DC2626' },
+    AMARILLO: { bg: 'rgba(245,158,11,0.12)',  color: '#D97706' },
+    VERDE:    { bg: 'rgba(16,185,129,0.12)',  color: '#059669' },
+    GRIS:     { bg: 'rgba(107,114,128,0.12)', color: '#6B7280' },
   }
   const s = map[nivel] || map.GRIS
   return (
@@ -200,10 +211,6 @@ export default function App() {
       .map(([name,value]) => ({name,value,pct:((value/totalAli)*100).toFixed(1)}))
   }, [ali, totalAli])
 
-  const tasaAprobacion = useMemo(() => porMes.map(m => ({
-    mes: m.mes, tasa: m.total ? +((m.aprobado/m.total)*100).toFixed(1) : 0
-  })), [porMes])
-
   const kpiTraz = useMemo(() => {
     const completo  = traz.filter(r => r.estado_trazabilidad === 'COMPLETO').length
     const sinAli    = traz.filter(r => r.estado_trazabilidad === 'SIN ALISTAMIENTO').length
@@ -246,24 +253,25 @@ export default function App() {
     <div style={{ minHeight:'100vh', background:C.surface }}>
 
       {/* HEADER */}
-      <div style={{ background:`linear-gradient(135deg, ${C.navy} 0%, #0D1B3E 100%)`,
-        borderBottom:`1px solid ${C.border}`, padding:'0 32px', position:'sticky', top:0, zIndex:100 }}>
+      <div style={{ background:'#FFFFFF', borderBottom:`1px solid ${C.border}`,
+        padding:'0 32px', position:'sticky', top:0, zIndex:100,
+        boxShadow:'0 2px 8px rgba(30,111,191,0.08)' }}>
         <div style={{ maxWidth:1400, margin:'0 auto', display:'flex', alignItems:'center',
-          justifyContent:'space-between', height:60 }}>
+          justifyContent:'space-between', height:64 }}>
           <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-            <img src={LOGO} alt="LAP Technologies" style={{ height:40, width:'auto', objectFit:'contain' }} />
+            <img src={LOGO} alt="LAP Technologies" style={{ height:42, width:'auto', objectFit:'contain' }} />
             <div>
-              <div style={{ fontSize:13, fontWeight:700, color:C.text }}>LAP Technologies</div>
+              <div style={{ fontSize:13, fontWeight:700, color:C.navy }}>LAP Technologies</div>
               <div style={{ fontSize:10, color:C.muted }}>Dirección de Operaciones & Productividad</div>
             </div>
           </div>
           <div style={{ display:'flex', gap:4 }}>
             {[{key:'alistamiento',label:'Alistamiento'},{key:'trazabilidad',label:'Trazabilidad'}].map(t => (
               <button key={t.key} onClick={() => setTab(t.key)} style={{
-                background: tab===t.key ? 'rgba(0,180,216,0.15)' : 'transparent',
-                border: tab===t.key ? `1px solid ${C.cyan}` : '1px solid transparent',
+                background: tab===t.key ? `rgba(0,180,216,0.1)` : 'transparent',
+                border: tab===t.key ? `1px solid ${C.cyan}` : `1px solid ${C.border}`,
                 color: tab===t.key ? C.cyan : C.muted,
-                padding:'6px 16px', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer'
+                padding:'7px 18px', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer'
               }}>{t.label}</button>
             ))}
           </div>
@@ -278,7 +286,7 @@ export default function App() {
         {tab === 'alistamiento' && (
           <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
             <div>
-              <h1 style={{ fontSize:20, fontWeight:700, color:C.text }}>Alistamiento Preoperacional de Servicios I&M</h1>
+              <h1 style={{ fontSize:20, fontWeight:700, color:C.navy }}>Alistamiento Preoperacional de Servicios I&M</h1>
               <p style={{ fontSize:12, color:C.muted, marginTop:2 }}>Responsable: María Jesus Correa Peinado · Último: {ultimoAli}</p>
             </div>
 
@@ -386,7 +394,7 @@ export default function App() {
                     <div key={i}>
                       <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
                         <span style={{ fontSize:11, color:C.text }}>{c.name}</span>
-                        <span style={{ fontSize:11, color:C.cyan }}>{c.pct}%</span>
+                        <span style={{ fontSize:11, color:C.blue, fontWeight:600 }}>{c.pct}%</span>
                       </div>
                       <div style={{ height:6, background:C.s3, borderRadius:3, overflow:'hidden' }}>
                         <div style={{ width:`${c.pct}%`, height:'100%',
@@ -403,7 +411,7 @@ export default function App() {
         {tab === 'trazabilidad' && (
           <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
             <div>
-              <h1 style={{ fontSize:20, fontWeight:700, color:C.text }}>Trazabilidad de Alistamientos e Instalaciones</h1>
+              <h1 style={{ fontSize:20, fontWeight:700, color:C.navy }}>Trazabilidad de Alistamientos e Instalaciones</h1>
               <p style={{ fontSize:12, color:C.muted, marginTop:2 }}>Cruce Movidesk · Alistamientos · Servicios I&M</p>
             </div>
 
@@ -428,7 +436,7 @@ export default function App() {
                         <div style={{ width:`${(e.value/kpiTraz.total)*100}%`, height:'100%',
                           background:COLORES_ESTADO[e.name]||C.muted, borderRadius:3, opacity:0.8 }} />
                       </div>
-                      <span style={{ fontSize:11, color:C.text, width:36, textAlign:'right' }}>{e.value}</span>
+                      <span style={{ fontSize:11, color:C.text, width:36, textAlign:'right', fontWeight:600 }}>{e.value}</span>
                     </div>
                   ))}
                 </div>
@@ -479,23 +487,24 @@ export default function App() {
               <div style={{ overflowX:'auto' }}>
                 <table style={{ width:'100%', borderCollapse:'collapse', fontSize:11 }}>
                   <thead>
-                    <tr style={{ borderBottom:`1px solid ${C.border}` }}>
+                    <tr style={{ borderBottom:`2px solid ${C.border}` }}>
                       {['Ticket','Placa','Cliente','Tecnología','Fecha Ali.','Fecha Inst.','Días','Estado','Alerta'].map(h => (
-                        <th key={h} style={{ padding:'8px 10px', textAlign:'left', color:C.muted, fontWeight:600, whiteSpace:'nowrap' }}>{h}</th>
+                        <th key={h} style={{ padding:'10px 10px', textAlign:'left', color:C.navy,
+                          fontWeight:700, whiteSpace:'nowrap', fontSize:11 }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {trazFiltrada.slice(0,100).map((r,i) => (
-                      <tr key={i} style={{ borderBottom:`1px solid rgba(0,180,216,0.05)`,
-                        background: i%2===0 ? 'transparent' : 'rgba(0,180,216,0.02)' }}>
-                        <td style={{ padding:'7px 10px', color:C.cyan }}>{r.ticket}</td>
+                      <tr key={i} style={{ borderBottom:`1px solid ${C.border}`,
+                        background: i%2===0 ? '#FFFFFF' : '#F8FAFC' }}>
+                        <td style={{ padding:'7px 10px', color:C.blue, fontWeight:600 }}>{r.ticket}</td>
                         <td style={{ padding:'7px 10px', color:C.text }}>{r.placa}</td>
                         <td style={{ padding:'7px 10px', color:C.text, maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.cliente}</td>
                         <td style={{ padding:'7px 10px', color:C.muted }}>{r.tecnologia}</td>
                         <td style={{ padding:'7px 10px', color:C.muted }}>{r.fecha_alistamiento||'—'}</td>
                         <td style={{ padding:'7px 10px', color:C.muted }}>{r.fecha_instalacion||'—'}</td>
-                        <td style={{ padding:'7px 10px', color:C.text }}>{r.dias_ali_inst||'—'}</td>
+                        <td style={{ padding:'7px 10px', color:C.text, fontWeight:600 }}>{r.dias_ali_inst||'—'}</td>
                         <td style={{ padding:'7px 10px', color:C.muted, fontSize:10 }}>{r.estado_trazabilidad}</td>
                         <td style={{ padding:'7px 10px' }}><AlertBadge nivel={r.nivel_alerta} /></td>
                       </tr>
@@ -514,7 +523,7 @@ export default function App() {
       </div>
 
       <div style={{ borderTop:`1px solid ${C.border}`, padding:'16px 32px',
-        textAlign:'center', fontSize:10, color:C.muted, marginTop:24 }}>
+        textAlign:'center', fontSize:10, color:C.muted, marginTop:24, background:'#fff' }}>
         LAP Technologies · Dirección de Operaciones & Productividad
       </div>
     </div>

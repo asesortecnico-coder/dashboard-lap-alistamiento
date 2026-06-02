@@ -173,11 +173,21 @@ export default function App() {
     return vals.length ? Math.round(vals.reduce((a, b) => a + b, 0) / vals.length) : 0
   }, [ali])
 
-  const ultimoAli = useMemo(() => {
+const ultimoAli = useMemo(() => {
     if (!ali.length) return '-'
+    const parsefecha = (f) => {
+      if (!f) return 0
+      const [fecha, hora] = String(f).split(' ')
+      const [d, m, y] = fecha.split('/')
+      return new Date(`${y}-${m?.padStart(2,'0')}-${d?.padStart(2,'0')}T${hora || '00:00:00'}`)
+    }
     const sorted = [...ali].sort((a, b) =>
-      new Date(b['Marca temporal']) - new Date(a['Marca temporal']))
-    return sorted[0]?.['Marca temporal']?.slice(0, 10) || '-'
+      parsefecha(b['Marca temporal']) - parsefecha(a['Marca temporal']))
+    const f = sorted[0]?.['Marca temporal'] || '-'
+    if (f === '-') return '-'
+    const [fecha] = String(f).split(' ')
+    const [d, m, y] = fecha.split('/')
+    return `${y}-${m?.padStart(2,'0')}-${d?.padStart(2,'0')}`
   }, [ali])
 
   // ── Por mes ───────────────────────────────────────────────

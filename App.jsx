@@ -365,7 +365,7 @@ const ultimoAli = useMemo(() => {
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
               <div>
                 <h1 style={{ fontSize: 20, fontWeight: 700, color: C.text }}>Alistamiento Preoperacional de Servicios I&M</h1>
-                <p style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Responsable: Mc Gregory Suarez Quintero · Último: {ultimoAli}</p>
+                <p style={{ fontSize: 12, color: C.muted, marginTop: 2 }}>Responsable: María Jesus Correa Peinado · Último: {ultimoAli}</p>
               </div>
             </div>
 

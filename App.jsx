@@ -193,7 +193,7 @@ const ultimoAli = useMemo(() => {
     , ali[0])
     const f = String(mejor['Marca temporal'] || '').trim().split(' ')[0].split('/')
     if (f.length !== 3) return '-'
-    return `${f[2]}-${f[1].padStart(2,'0')}-${f[0].padStart(2,'0')}`
+    return `${f[0].padStart(2,'0')}/${f[1].padStart(2,'0')}/${f[2]}`
   }, [ali])
 
   // ── Por mes ───────────────────────────────────────────────

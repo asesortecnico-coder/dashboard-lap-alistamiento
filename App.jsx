@@ -34,11 +34,13 @@ const MES_MAP = {
 
 function parseMes(fecha) {
   if (!fecha) return null
-  const m = String(fecha).slice(5, 7)
-  const y = String(fecha).slice(0, 4)
-  return `${MES_MAP[m] || m} ${y.slice(2)}`
+  const str = String(fecha).trim()
+  const [fechaParte] = str.split(' ')
+  const partes = fechaParte.split('/')
+  if (partes.length !== 3) return null
+  const [d, m, y] = partes
+  return `${MES_MAP[m.padStart(2,'0')] || m} ${y.slice(2)}`
 }
-
 // ── KPI Card ──────────────────────────────────────────────────
 function KPI({ label, value, sub, accent = C.cyan }) {
   return (

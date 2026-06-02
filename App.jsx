@@ -770,6 +770,29 @@ export default function App() {
               <KPI label="Alerta AMARILLA" value={fmt(kpiTraz.amarillos)} accent={C.yellow} />
             </div>
 
+{/* Top clientes trazabilidad */}
+            <Card>
+              <SectionTitle>Top 10 Clientes con Más Registros</SectionTitle>
+              <div style={{ display:'flex', flexDirection:'column', gap:8, marginTop:4 }}>
+                {useMemo(() => {
+                  const map = {}
+                  trazFiltrada.forEach(r => { const c = r.cliente||'N/A'; map[c]=(map[c]||0)+1 })
+                  return Object.entries(map).sort((a,b) => b[1]-a[1]).slice(0,10)
+                    .map(([name,value],i) => ({name,value,pct:kpiTraz.total?((value/kpiTraz.total)*100).toFixed(1):'0',i}))
+                }, [trazFiltrada,kpiTraz]).map((c,i) => (
+                  <div key={i} style={{ display:'flex', alignItems:'center', gap:8 }}>
+                    <span style={{ fontSize:10, color:C.muted, width:22, textAlign:'right', fontWeight:700 }}>{i+1}.</span>
+                    <span style={{ fontSize:10, color:C.text, width:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', flexShrink:0 }}>{c.name}</span>
+                    <div style={{ flex:1, height:18, background:C.s3, borderRadius:4, overflow:'hidden' }}>
+                      <div style={{ width:`${c.pct}%`, height:'100%', background:`linear-gradient(90deg, ${C.cyan}, ${C.blue})`, borderRadius:4 }} />
+                    </div>
+                    <span style={{ fontSize:11, color:C.navy, fontWeight:700, width:28, textAlign:'right' }}>{c.value}</span>
+                    <span style={{ fontSize:10, color:C.muted, width:38, textAlign:'right' }}>{c.pct}%</span>
+                  </div>
+                ))}
+              </div>
+            </Card>
+
             <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
               <Card>
                 <SectionTitle>Estado de Trazabilidad</SectionTitle>

@@ -175,19 +175,22 @@ export default function App() {
 
 const ultimoAli = useMemo(() => {
     if (!ali.length) return '-'
-    const parsefecha = (f) => {
-      if (!f) return 0
-      const [fecha, hora] = String(f).split(' ')
-      const [d, m, y] = fecha.split('/')
-      return new Date(`${y}-${m?.padStart(2,'0')}-${d?.padStart(2,'0')}T${hora || '00:00:00'}`)
+    const parseFecha = (f) => {
+      if (!f) return new Date(0)
+      const str = String(f).trim()
+      const [fechaParte, horaParte = '00:00:00'] = str.split(' ')
+      const partes = fechaParte.split('/')
+      if (partes.length !== 3) return new Date(0)
+      const [d, m, y] = partes
+      return new Date(`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}T${horaParte}`)
     }
     const sorted = [...ali].sort((a, b) =>
-      parsefecha(b['Marca temporal']) - parsefecha(a['Marca temporal']))
-    const f = sorted[0]?.['Marca temporal'] || '-'
-    if (f === '-') return '-'
-    const [fecha] = String(f).split(' ')
-    const [d, m, y] = fecha.split('/')
-    return `${y}-${m?.padStart(2,'0')}-${d?.padStart(2,'0')}`
+      parseFecha(b['Marca temporal']) - parseFecha(a['Marca temporal']))
+    const f = String(sorted[0]?.['Marca temporal'] || '').trim()
+    if (!f) return '-'
+    const [fechaParte] = f.split(' ')
+    const [d, m, y] = fechaParte.split('/')
+    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
   }, [ali])
 
   // ── Por mes ───────────────────────────────────────────────

@@ -178,21 +178,22 @@ export default function App() {
 const ultimoAli = useMemo(() => {
     if (!ali.length) return '-'
     const parseFecha = (f) => {
-      if (!f) return new Date(0)
+      if (!f) return 0
       const str = String(f).trim()
-      const [fechaParte, horaParte = '00:00:00'] = str.split(' ')
-      const partes = fechaParte.split('/')
-      if (partes.length !== 3) return new Date(0)
-      const [d, m, y] = partes
-      return new Date(`${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}T${horaParte}`)
+      const parts = str.split(' ')
+      const dmY = parts[0].split('/')
+      if (dmY.length !== 3) return 0
+      const d = parseInt(dmY[0]), m = parseInt(dmY[1]), y = parseInt(dmY[2])
+      const h = parts[1] ? parts[1].split(':') : [0,0,0]
+      return y * 100000000 + m * 1000000 + d * 10000 +
+             parseInt(h[0]||0) * 100 + parseInt(h[1]||0)
     }
-    const sorted = [...ali].sort((a, b) =>
-      parseFecha(b['Marca temporal']) - parseFecha(a['Marca temporal']))
-    const f = String(sorted[0]?.['Marca temporal'] || '').trim()
-    if (!f) return '-'
-    const [fechaParte] = f.split(' ')
-    const [d, m, y] = fechaParte.split('/')
-    return `${y}-${m.padStart(2,'0')}-${d.padStart(2,'0')}`
+    const mejor = ali.reduce((max, r) =>
+      parseFecha(r['Marca temporal']) > parseFecha(max['Marca temporal']) ? r : max
+    , ali[0])
+    const f = String(mejor['Marca temporal'] || '').trim().split(' ')[0].split('/')
+    if (f.length !== 3) return '-'
+    return `${f[2]}-${f[1].padStart(2,'0')}-${f[0].padStart(2,'0')}`
   }, [ali])
 
   // ── Por mes ───────────────────────────────────────────────

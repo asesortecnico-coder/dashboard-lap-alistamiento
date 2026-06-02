@@ -417,7 +417,7 @@ export default function App() {
               count={aliFiltrada.length} active={aliActive}>
               <FInput    label="Cliente"     placeholder="Buscar cliente..."  value={fAliCliente}    setter={setFAliCliente} />
               <FInput    label="Placa"       placeholder="Buscar placa..."    value={fAliPlaca}      setter={setFAliPlaca} />
-              <FSelect   label="Técnico"     value={fAliTecnico}    setter={setFAliTecnico}    options={opTecnico}    placeholder="Todos" />
+              <FSelect   label="Responsable"     value={fAliTecnico}    setter={setFAliTecnico}    options={opTecnico}    placeholder="Todos" />
               <FSelect   label="Tecnología"  value={fAliTecnologia} setter={setFAliTecnologia} options={opTecnologia} placeholder="Todas" />
               <FSelect   label="Ciudad"      value={fAliCiudad}     setter={setFAliCiudad}     options={opCiudad}     placeholder="Todas" />
               <FSelect   label="Comercial"   value={fAliComercial}  setter={setFAliComercial}  options={opComercial}  placeholder="Todos" />

@@ -67,16 +67,11 @@ function KPI({ label, value, sub, accent = C.cyan }) {
 }
 
 // ── Section header ─────────────────────────────────────────────
-function SectionTitle({ children }) {
-  return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-      <div style={{ width: 3, height: 16, background: C.cyan, borderRadius: 2 }} />
-      <span style={{ fontSize: 12, fontWeight: 600, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.5 }}>
-        {children}
-      </span>
-    </div>
-  )
-}
+<img
+  src="https://kvmheirckuhngouanphl.supabase.co/storage/v1/object/public/Control%20de%20Alistamiento/Mesa%20de%20trabajo%202-8.png"
+  alt="LAP Technologies"
+  style={{ height: 40, width: 'auto', objectFit: 'contain' }}
+/>
 
 // ── Chart card ────────────────────────────────────────────────
 function Card({ children, style = {} }) {

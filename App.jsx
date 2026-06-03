@@ -801,7 +801,7 @@ export default function App() {
                 <table style={{ width:'100%', borderCollapse:'collapse', fontSize:11 }}>
                   <thead>
                     <tr style={{ borderBottom:`2px solid ${C.border}` }}>
-                      {['Ticket','Placa','Cliente','Tecnología','Fecha Ali.','Fecha Inst.','Días','Estado','Alerta'].map(h => (
+                      {['Ticket','Placa','Cliente','Tecnología','ICC/SIM','IMEI','Serial','Fecha Ali.','Fecha Inst.','Días','Estado','Alerta'].map(h => (
                         <th key={h} style={{ padding:'8px 8px', textAlign:'left', color:C.navy, fontWeight:700, whiteSpace:'nowrap', fontSize:10 }}>{h}</th>
                       ))}
                     </tr>
@@ -809,16 +809,19 @@ export default function App() {
                   <tbody>
                     {trazFiltrada.slice(0,100).map((r,i) => (
                       <tr key={i} style={{ borderBottom:`1px solid ${C.border}`, background: i%2===0?'#FFFFFF':'#F8FAFC' }}>
-                        <td style={{ padding:'6px 8px', color:C.blue, fontWeight:600, fontSize:10 }}>{r.ticket}</td>
-                        <td style={{ padding:'6px 8px', color:C.text, fontSize:10 }}>{r.placa}</td>
-                        <td style={{ padding:'6px 8px', color:C.text, maxWidth:120, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontSize:10 }}>{r.cliente}</td>
-                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r.tecnologia}</td>
-                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10, whiteSpace:'nowrap' }}>{r.fecha_alistamiento||'—'}</td>
-                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10, whiteSpace:'nowrap' }}>{r.fecha_instalacion||'—'}</td>
-                        <td style={{ padding:'6px 8px', color:C.text, fontWeight:600, fontSize:10 }}>{r.dias_ali_inst||'—'}</td>
-                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:9 }}>{r.estado_trazabilidad}</td>
-                        <td style={{ padding:'6px 8px' }}><AlertBadge nivel={r.nivel_alerta} /></td>
-                      </tr>
+  <td style={{ padding:'6px 8px', color:C.blue, fontWeight:600, fontSize:10 }}>{r.ticket}</td>
+  <td style={{ padding:'6px 8px', color:C.text, fontSize:10 }}>{r.placa}</td>
+  <td style={{ padding:'6px 8px', color:C.text, maxWidth:120, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontSize:10 }}>{r.cliente}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r.tecnologia}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r.icc_sim||'—'}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r.imei||'—'}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r.serial||'—'}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10, whiteSpace:'nowrap' }}>{r.fecha_alistamiento||'—'}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10, whiteSpace:'nowrap' }}>{r.fecha_instalacion||'—'}</td>
+  <td style={{ padding:'6px 8px', color:C.text, fontWeight:600, fontSize:10 }}>{r.dias_ali_inst||'—'}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:9 }}>{r.estado_trazabilidad}</td>
+  <td style={{ padding:'6px 8px' }}><AlertBadge nivel={r.nivel_alerta} /></td>
+</tr>
                     ))}
                   </tbody>
                 </table>

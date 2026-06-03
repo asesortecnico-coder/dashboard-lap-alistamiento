@@ -684,7 +684,7 @@ export default function App() {
                 <table style={{ width:'100%', borderCollapse:'collapse', fontSize:11 }}>
                   <thead>
                     <tr style={{ borderBottom:`2px solid ${C.border}` }}>
-                      {['Fecha','Cliente','Placa','Responsable','Tecnología','Ciudad','Comercial','Estado'].map(h => (
+                      {['Fecha','Cliente','Placa','ICC/SIM','IMEI','Serial','Responsable','Tecnología','Ciudad','Comercial','Estado'].map(h => (
                         <th key={h} style={{ padding:'8px 8px', textAlign:'left', color:C.navy, fontWeight:700, whiteSpace:'nowrap', fontSize:10 }}>{h}</th>
                       ))}
                     </tr>
@@ -692,21 +692,24 @@ export default function App() {
                   <tbody>
                     {aliFiltrada.slice(0,100).map((r,i) => (
                       <tr key={i} style={{ borderBottom:`1px solid ${C.border}`, background: i%2===0?'#FFFFFF':'#F8FAFC' }}>
-                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10, whiteSpace:'nowrap' }}>{String(r['Marca temporal']||'').split(' ')[0]}</td>
-                        <td style={{ padding:'6px 8px', color:C.text, maxWidth:120, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontSize:10 }}>{r['NOMBRE CLIENTE']}</td>
-                        <td style={{ padding:'6px 8px', color:C.blue, fontWeight:600, fontSize:10 }}>{r['IDENTIFICACIÓN DEL ACTIVO (PLACA)']}</td>
-                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['RESPONSABLE']}</td>
-                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['TIPO DE TECNOLOGÍA']}</td>
-                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['CIUDAD DONDE SE VA A INSTALAR']}</td>
-                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['COMERCIAL ENCARGADO']}</td>
-                        <td style={{ padding:'6px 8px' }}>
-                          <span style={{
-                            background: r['ESTADO FINAL']==='APROBADO'?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)',
-                            color: r['ESTADO FINAL']==='APROBADO'?'#059669':'#DC2626',
-                            padding:'2px 6px', borderRadius:20, fontSize:9, fontWeight:700
-                          }}>{r['ESTADO FINAL']}</span>
-                        </td>
-                      </tr>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10, whiteSpace:'nowrap' }}>{String(r['Marca temporal']||'').split(' ')[0]}</td>
+  <td style={{ padding:'6px 8px', color:C.text, maxWidth:120, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontSize:10 }}>{r['NOMBRE CLIENTE']}</td>
+  <td style={{ padding:'6px 8px', color:C.blue, fontWeight:600, fontSize:10 }}>{r['IDENTIFICACIÓN DEL ACTIVO (PLACA)']}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['ICC/ID DE LA SIM CARD']||'—'}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['IMEI DE EQUIPO']||'—'}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['SERIAL DEL EQUIPO']||'—'}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['RESPONSABLE']}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['TIPO DE TECNOLOGÍA']}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['CIUDAD DONDE SE VA A INSTALAR']}</td>
+  <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['COMERCIAL ENCARGADO']}</td>
+  <td style={{ padding:'6px 8px' }}>
+    <span style={{
+      background: r['ESTADO FINAL']==='APROBADO'?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)',
+      color: r['ESTADO FINAL']==='APROBADO'?'#059669':'#DC2626',
+      padding:'2px 6px', borderRadius:20, fontSize:9, fontWeight:700
+    }}>{r['ESTADO FINAL']}</span>
+  </td>
+</tr>
                     ))}
                   </tbody>
                 </table>

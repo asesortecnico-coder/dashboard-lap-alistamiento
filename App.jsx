@@ -49,6 +49,16 @@ const CIUDAD_COORDS = {
   'BUCARAMANGA/BOGOTA': [6.0, -73.7],
 }
 
+function useIsMobile() {
+  const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
+  useEffect(() => {
+    const handler = () => setIsMobile(window.innerWidth < 768)
+    window.addEventListener('resize', handler)
+    return () => window.removeEventListener('resize', handler)
+  }, [])
+  return isMobile
+}
+
 function parseMes(fecha) {
   if (!fecha) return null
   const str = String(fecha).trim()
@@ -83,13 +93,13 @@ function parseFechaDate(f) {
 function KPI({ label, value, sub, accent = C.cyan }) {
   return (
     <div style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12,
-      padding: '18px 20px', display: 'flex', flexDirection: 'column', gap: 4,
+      padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 4,
       position: 'relative', overflow: 'hidden', boxShadow: '0 2px 8px rgba(30,111,191,0.08)' }}>
       <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3,
         background: `linear-gradient(90deg, ${accent}, transparent)` }} />
-      <span style={{ fontSize: 11, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</span>
-      <span style={{ fontSize: 28, fontWeight: 700, color: C.text, lineHeight: 1 }}>{value}</span>
-      {sub && <span style={{ fontSize: 11, color: C.muted }}>{sub}</span>}
+      <span style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</span>
+      <span style={{ fontSize: 24, fontWeight: 700, color: C.text, lineHeight: 1 }}>{value}</span>
+      {sub && <span style={{ fontSize: 10, color: C.muted }}>{sub}</span>}
     </div>
   )
 }
@@ -98,7 +108,7 @@ function SectionTitle({ children }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
       <div style={{ width: 3, height: 16, background: C.cyan, borderRadius: 2 }} />
-      <span style={{ fontSize: 12, fontWeight: 600, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+      <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.5 }}>
         {children}
       </span>
     </div>
@@ -108,7 +118,7 @@ function SectionTitle({ children }) {
 function Card({ children, style = {} }) {
   return (
     <div style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12,
-      padding: '20px 20px 16px', boxShadow: '0 2px 8px rgba(30,111,191,0.08)', ...style }}>
+      padding: '16px 16px 14px', boxShadow: '0 2px 8px rgba(30,111,191,0.08)', ...style }}>
       {children}
     </div>
   )
@@ -116,15 +126,23 @@ function Card({ children, style = {} }) {
 
 const inputStyle = {
   background: '#F4F6FA', border: `1px solid rgba(30,111,191,0.2)`,
-  borderRadius: 7, padding: '6px 10px', fontSize: 11,
+  borderRadius: 7, padding: '8px 10px', fontSize: 12,
   color: '#1A2B4A', outline: 'none', width: '100%', boxSizing: 'border-box'
 }
 
-function FilterBar({ children, onClear, count, active }) {
+function FilterBar({ children, onClear, count, active, isMobile }) {
+  const [open, setOpen] = useState(!isMobile)
+  useEffect(() => { setOpen(!isMobile) }, [isMobile])
   return (
-    <Card style={{ padding: '14px 20px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 12 }}>
+    <Card style={{ padding: '14px 16px' }}>
+      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: open ? 12 : 0 }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          {isMobile && (
+            <button onClick={() => setOpen(!open)} style={{ background: 'none', border: 'none',
+              fontSize: 16, cursor: 'pointer', padding: 0, color: C.navy }}>
+              {open ? '▲' : '▼'}
+            </button>
+          )}
           <span style={{ fontSize: 11, fontWeight: 700, color: C.navy, textTransform: 'uppercase', letterSpacing: 1 }}>
             🔍 Filtros
           </span>
@@ -136,13 +154,17 @@ function FilterBar({ children, onClear, count, active }) {
           )}
         </div>
         <button onClick={onClear} style={{ fontSize: 10, color: C.muted, background: 'none',
-          border: `1px solid ${C.border}`, borderRadius: 6, padding: '4px 12px', cursor: 'pointer' }}>
-          Limpiar filtros
+          border: `1px solid ${C.border}`, borderRadius: 6, padding: '4px 10px', cursor: 'pointer' }}>
+          Limpiar
         </button>
       </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8, alignItems: 'end' }}>
-        {children}
-      </div>
+      {open && (
+        <div style={{ display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(150px, 1fr))',
+          gap: 8, alignItems: 'end' }}>
+          {children}
+        </div>
+      )}
     </Card>
   )
 }
@@ -193,21 +215,21 @@ function MapaCiudades({ datos }) {
       const container = document.getElementById(mapId)
       if (!container || !L) return
       if (container._leaflet_id) { container._leaflet_id = null; container.innerHTML = '' }
-      const map = L.map(mapId, { zoomControl: true, scrollWheelZoom: false }).setView([4.5, -74.0], 5.5)
+      const map = L.map(mapId, { zoomControl: true, scrollWheelZoom: false }).setView([4.5, -74.0], 5)
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '© OpenStreetMap' }).addTo(map)
       const maxVal = Math.max(...datos.map(d => d.value), 1)
       datos.forEach(({ name, value }) => {
         const key = name.toUpperCase().trim()
         const coords = CIUDAD_COORDS[key]
         if (!coords) return
-        const radio = 8 + (value / maxVal) * 28
+        const radio = 8 + (value / maxVal) * 24
         const circle = L.circleMarker(coords, {
           radius: radio, fillColor: '#00B4D8', color: '#1D2B5F',
           weight: 2, opacity: 0.9, fillOpacity: 0.7
         }).addTo(map)
-        circle.bindPopup(`<div style="font-family:sans-serif;font-size:13px;min-width:120px">
+        circle.bindPopup(`<div style="font-family:sans-serif;font-size:13px">
           <b style="color:#1D2B5F">${name}</b><br/>
-          <span style="color:#5A7A9C">Alistamientos:</span>
+          <span style="color:#5A7A9C">Alistamientos: </span>
           <b style="color:#00B4D8">${value}</b></div>`)
       })
     }
@@ -219,7 +241,7 @@ function MapaCiudades({ datos }) {
     }
     return () => { const c = document.getElementById(mapId); if (c) c.innerHTML = '' }
   }, [datos])
-  return <div id={mapId} style={{ height: 380, borderRadius: 8, overflow: 'hidden', border: `1px solid ${C.border}`, zIndex: 0 }} />
+  return <div id={mapId} style={{ height: 320, borderRadius: 8, overflow: 'hidden', border: `1px solid ${C.border}`, zIndex: 0 }} />
 }
 
 const CustomTooltip = ({ active, payload, label }) => {
@@ -250,10 +272,10 @@ function TopClientes({ datos }) {
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 4 }}>
       {datos.map((c, i) => (
-        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <span style={{ fontSize: 10, color: C.muted, width: 22, textAlign: 'right', fontWeight: 700 }}>{i+1}.</span>
-          <span style={{ fontSize: 10, color: C.text, width: 160, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>{c.name}</span>
-          <div style={{ flex: 1, height: 18, background: C.s3, borderRadius: 4, overflow: 'hidden' }}>
+        <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <span style={{ fontSize: 10, color: C.muted, width: 20, textAlign: 'right', fontWeight: 700, flexShrink: 0 }}>{i+1}.</span>
+          <span style={{ fontSize: 10, color: C.text, width: 140, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', flexShrink: 0 }}>{c.name}</span>
+          <div style={{ flex: 1, height: 16, background: C.s3, borderRadius: 4, overflow: 'hidden' }}>
             <div style={{
               width: `${max ? (c.value / max) * 100 : 0}%`, height: '100%', borderRadius: 4,
               background: i === 0 ? `linear-gradient(90deg, ${C.cyan}, ${C.blue})`
@@ -261,8 +283,8 @@ function TopClientes({ datos }) {
                 : `linear-gradient(90deg, #3b82f6, ${C.cyanL})`
             }} />
           </div>
-          <span style={{ fontSize: 11, color: C.navy, fontWeight: 700, width: 28, textAlign: 'right' }}>{c.value}</span>
-          <span style={{ fontSize: 10, color: C.muted, width: 38, textAlign: 'right' }}>{c.pct}%</span>
+          <span style={{ fontSize: 11, color: C.navy, fontWeight: 700, width: 26, textAlign: 'right', flexShrink: 0 }}>{c.value}</span>
+          <span style={{ fontSize: 10, color: C.muted, width: 36, textAlign: 'right', flexShrink: 0 }}>{c.pct}%</span>
         </div>
       ))}
     </div>
@@ -272,6 +294,7 @@ function TopClientes({ datos }) {
 const LOGO = "https://kvmheirckuhngouanphl.supabase.co/storage/v1/object/public/Control%20de%20Alistamiento/Mesa%20de%20trabajo%202-8.png"
 
 export default function App() {
+  const isMobile = useIsMobile()
   const [ali, setAli]   = useState([])
   const [traz, setTraz] = useState([])
   const [loading, setLoading] = useState(true)
@@ -342,7 +365,6 @@ export default function App() {
   }), [ali, fAliCliente, fAliPlaca, fAliTecnico, fAliTecnologia, fAliCiudad, fAliComercial, fAliEstado, fAliDesde, fAliHasta])
 
   const aliActive = !!(fAliCliente||fAliPlaca||fAliTecnico||fAliTecnologia||fAliCiudad||fAliComercial||fAliEstado||fAliDesde||fAliHasta)
-
   const totalAli     = aliFiltrada.length
   const aprobados    = aliFiltrada.filter(r => r['ESTADO FINAL'] === 'APROBADO').length
   const reutilizados = aliFiltrada.filter(r => r['CONDICIÓN DEL EQUIPO'] === 'USADO').length
@@ -440,7 +462,6 @@ export default function App() {
     return { completo, sinAli, pendiente, rojos, amarillos, total: trazFiltrada.length }
   }, [trazFiltrada])
 
-  // ── Top 10 clientes trazabilidad ──────────────────────────
   const porClienteTraz = useMemo(() => {
     const map = {}
     trazFiltrada.forEach(r => { const c = r.cliente||'N/A'; map[c]=(map[c]||0)+1 })
@@ -461,6 +482,14 @@ export default function App() {
   }
   const PIE_COLORS = [C.cyan, C.blue, C.navy, C.cyanL, C.muted]
 
+  const pad = isMobile ? '16px' : '28px 32px'
+  const gap = isMobile ? 16 : 24
+  const col2 = isMobile ? '1fr' : '1.4fr 1fr'
+  const col3 = isMobile ? '1fr' : '1fr 1.5fr 1fr'
+  const col6 = isMobile ? '1fr 1fr' : 'repeat(6, 1fr)'
+  const col5 = isMobile ? '1fr 1fr' : 'repeat(5, 1fr)'
+  const colMap = isMobile ? '1fr' : '1.3fr 1fr'
+
   if (loading) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:C.surface }}>
       <div style={{ textAlign:'center' }}>
@@ -472,17 +501,20 @@ export default function App() {
 
   return (
     <div style={{ minHeight:'100vh', background:C.surface }}>
+      {/* HEADER */}
       <div style={{ background:'#FFFFFF', borderBottom:`1px solid ${C.border}`,
-        padding:'0 32px', position:'sticky', top:0, zIndex:1000,
-        boxShadow:'0 2px 8px rgba(30,111,191,0.08)' }}>
+        padding: isMobile ? '0 16px' : '0 32px',
+        position:'sticky', top:0, zIndex:1000, boxShadow:'0 2px 8px rgba(30,111,191,0.08)' }}>
         <div style={{ maxWidth:1400, margin:'0 auto', display:'flex', alignItems:'center',
-          justifyContent:'space-between', height:64 }}>
-          <div style={{ display:'flex', alignItems:'center', gap:14 }}>
-            <img src={LOGO} alt="LAP Technologies" style={{ height:42, width:'auto', objectFit:'contain' }} />
-            <div>
-              <div style={{ fontSize:13, fontWeight:700, color:C.navy }}>LAP Technologies</div>
-              <div style={{ fontSize:10, color:C.muted }}>Dirección de Operaciones & Productividad</div>
-            </div>
+          justifyContent:'space-between', height: isMobile ? 56 : 64 }}>
+          <div style={{ display:'flex', alignItems:'center', gap: isMobile ? 8 : 14 }}>
+            <img src={LOGO} alt="LAP Technologies" style={{ height: isMobile ? 32 : 42, width:'auto', objectFit:'contain' }} />
+            {!isMobile && (
+              <div>
+                <div style={{ fontSize:13, fontWeight:700, color:C.navy }}>LAP Technologies</div>
+                <div style={{ fontSize:10, color:C.muted }}>Dirección de Operaciones & Productividad</div>
+              </div>
+            )}
           </div>
           <div style={{ display:'flex', gap:4 }}>
             {[{key:'alistamiento',label:'Alistamiento'},{key:'trazabilidad',label:'Trazabilidad'}].map(t => (
@@ -490,29 +522,37 @@ export default function App() {
                 background: tab===t.key ? 'rgba(0,180,216,0.1)' : 'transparent',
                 border: tab===t.key ? `1px solid ${C.cyan}` : `1px solid ${C.border}`,
                 color: tab===t.key ? C.cyan : C.muted,
-                padding:'7px 18px', borderRadius:8, fontSize:12, fontWeight:600, cursor:'pointer'
+                padding: isMobile ? '6px 12px' : '7px 18px',
+                borderRadius:8, fontSize: isMobile ? 11 : 12, fontWeight:600, cursor:'pointer'
               }}>{t.label}</button>
             ))}
           </div>
-          <div style={{ fontSize:11, color:C.muted }}>
-            Actualización: cada 2 horas · <span style={{ color:C.cyan }}>En vivo</span>
-          </div>
+          {!isMobile && (
+            <div style={{ fontSize:11, color:C.muted }}>
+              Actualización: cada 2 horas · <span style={{ color:C.cyan }}>En vivo</span>
+            </div>
+          )}
         </div>
       </div>
 
-      <div style={{ maxWidth:1400, margin:'0 auto', padding:'28px 32px' }}>
+      <div style={{ maxWidth:1400, margin:'0 auto', padding: pad }}>
 
         {/* ══════════ ALISTAMIENTO ══════════ */}
         {tab === 'alistamiento' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+          <div style={{ display:'flex', flexDirection:'column', gap }}>
             <div>
-              <h1 style={{ fontSize:20, fontWeight:700, color:C.navy }}>Alistamiento Preoperacional de Servicios I&M</h1>
-              <p style={{ fontSize:12, color:C.muted, marginTop:2 }}>Responsable: María Jesus Correa Peinado · Último: {ultimoAli}</p>
+              <h1 style={{ fontSize: isMobile ? 16 : 20, fontWeight:700, color:C.navy }}>
+                Alistamiento Preoperacional de Servicios I&M
+              </h1>
+              <p style={{ fontSize:11, color:C.muted, marginTop:2 }}>
+                Responsable: María Jesus Correa Peinado · Último: {ultimoAli}
+              </p>
             </div>
 
-            <FilterBar onClear={() => { setFAliCliente(''); setFAliPlaca(''); setFAliTecnico('');
-              setFAliTecnologia(''); setFAliCiudad(''); setFAliComercial('');
-              setFAliEstado(''); setFAliDesde(''); setFAliHasta('') }}
+            <FilterBar isMobile={isMobile}
+              onClear={() => { setFAliCliente(''); setFAliPlaca(''); setFAliTecnico('');
+                setFAliTecnologia(''); setFAliCiudad(''); setFAliComercial('');
+                setFAliEstado(''); setFAliDesde(''); setFAliHasta('') }}
               count={aliFiltrada.length} active={aliActive}>
               <FInput  label="Cliente"     placeholder="Buscar cliente..." value={fAliCliente}    setter={setFAliCliente} />
               <FInput  label="Placa"       placeholder="Buscar placa..."   value={fAliPlaca}      setter={setFAliPlaca} />
@@ -525,112 +565,112 @@ export default function App() {
               <FDate   label="Hasta"       value={fAliHasta}      setter={setFAliHasta} />
             </FilterBar>
 
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(5, 1fr)', gap:14 }}>
-              <KPI label="Alistamientos" value={fmt(totalAli)} accent={C.cyan} />
-              <KPI label="Aprobados" value={fmt(aprobados)} sub={pct(aprobados,totalAli)} accent={C.green} />
-              <KPI label="Aprobación %" value={pct(aprobados,totalAli)} accent={C.green} />
-              <KPI label="Reutilizados" value={fmt(reutilizados)} sub={pct(reutilizados,totalAli)} accent={C.yellow} />
-              <KPI label="Tiempo Prom. (Min)" value={tiempoPromedio} accent={C.blue} />
+            <div style={{ display:'grid', gridTemplateColumns: col5, gap:10 }}>
+              <KPI label="Alistamientos"    value={fmt(totalAli)}          accent={C.cyan} />
+              <KPI label="Aprobados"        value={fmt(aprobados)}         sub={pct(aprobados,totalAli)}    accent={C.green} />
+              <KPI label="Aprobación %"     value={pct(aprobados,totalAli)} accent={C.green} />
+              <KPI label="Reutilizados"     value={fmt(reutilizados)}      sub={pct(reutilizados,totalAli)} accent={C.yellow} />
+              <KPI label="Tiempo Prom (Min)" value={tiempoPromedio}        accent={C.blue} />
             </div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1.4fr 1fr', gap:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns: col2, gap:14 }}>
               <Card>
-                <SectionTitle>Cantidad de Alistamientos por Mes</SectionTitle>
-                <ResponsiveContainer width="100%" height={220}>
-                  <BarChart data={porMes} barSize={22}>
+                <SectionTitle>Alistamientos por Mes</SectionTitle>
+                <ResponsiveContainer width="100%" height={200}>
+                  <BarChart data={porMes} barSize={18}>
                     <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
-                    <XAxis dataKey="mes" tick={{ fill:C.muted, fontSize:11 }} axisLine={false} tickLine={false} />
-                    <YAxis tick={{ fill:C.muted, fontSize:11 }} axisLine={false} tickLine={false} />
+                    <XAxis dataKey="mes" tick={{ fill:C.muted, fontSize:10 }} axisLine={false} tickLine={false} />
+                    <YAxis tick={{ fill:C.muted, fontSize:10 }} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize:11, color:C.muted }} />
+                    <Legend wrapperStyle={{ fontSize:10, color:C.muted }} />
                     <Bar dataKey="claro" name="CLARO" fill={C.cyan} radius={[4,4,0,0]} />
                     <Bar dataKey="movistar" name="MOVISTAR" fill={C.blue} radius={[4,4,0,0]} />
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
               <Card>
-                <SectionTitle>Tipo de Tecnología Alistada</SectionTitle>
-                <div style={{ display:'flex', flexDirection:'column', gap:6 }}>
+                <SectionTitle>Tipo de Tecnología</SectionTitle>
+                <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
                   {porTecnologia.map((t,i) => (
-                    <div key={i} style={{ display:'flex', alignItems:'center', gap:8 }}>
-                      <span style={{ fontSize:11, color:C.muted, width:120, textAlign:'right' }}>{t.name}</span>
-                      <div style={{ flex:1, height:16, background:C.s3, borderRadius:4, overflow:'hidden' }}>
+                    <div key={i} style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      <span style={{ fontSize:10, color:C.muted, width:100, textAlign:'right' }}>{t.name}</span>
+                      <div style={{ flex:1, height:14, background:C.s3, borderRadius:4, overflow:'hidden' }}>
                         <div style={{ width:`${porTecnologia[0]?.value?(t.value/porTecnologia[0].value)*100:0}%`,
                           height:'100%', background:`linear-gradient(90deg, ${C.cyan}, ${C.blue})`, borderRadius:4 }} />
                       </div>
-                      <span style={{ fontSize:11, color:C.text, width:30, textAlign:'right' }}>{t.value}</span>
+                      <span style={{ fontSize:10, color:C.text, width:26, textAlign:'right' }}>{t.value}</span>
                     </div>
                   ))}
                 </div>
               </Card>
             </div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1.5fr 1fr', gap:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns: col3, gap:14 }}>
               <Card>
-                <SectionTitle>Empresa de Telefonía</SectionTitle>
-                <ResponsiveContainer width="100%" height={180}>
+                <SectionTitle>Telefonía</SectionTitle>
+                <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
-                    <Pie data={porOperador} cx="50%" cy="50%" innerRadius={50} outerRadius={75} dataKey="value" nameKey="name">
+                    <Pie data={porOperador} cx="50%" cy="50%" innerRadius={40} outerRadius={60} dataKey="value" nameKey="name">
                       {porOperador.map((_,i) => <Cell key={i} fill={PIE_COLORS[i%PIE_COLORS.length]} />)}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize:11, color:C.muted }} />
+                    <Legend wrapperStyle={{ fontSize:10, color:C.muted }} />
                   </PieChart>
                 </ResponsiveContainer>
               </Card>
               <Card>
-                <SectionTitle>Ciudad Donde Se Va a Instalar</SectionTitle>
-                <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
+                <SectionTitle>Ciudad de Instalación</SectionTitle>
+                <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
                   {porCiudad.map((c,i) => (
-                    <div key={i} style={{ display:'flex', alignItems:'center', gap:8 }}>
-                      <span style={{ fontSize:10, color:C.muted, width:100, textAlign:'right' }}>{c.name}</span>
-                      <div style={{ flex:1, height:14, background:C.s3, borderRadius:3, overflow:'hidden' }}>
+                    <div key={i} style={{ display:'flex', alignItems:'center', gap:6 }}>
+                      <span style={{ fontSize:9, color:C.muted, width:80, textAlign:'right' }}>{c.name}</span>
+                      <div style={{ flex:1, height:12, background:C.s3, borderRadius:3, overflow:'hidden' }}>
                         <div style={{ width:`${c.pct}%`, height:'100%', background:`linear-gradient(90deg, ${C.blue}, ${C.cyan})`, borderRadius:3 }} />
                       </div>
-                      <span style={{ fontSize:10, color:C.muted, width:40 }}>{c.pct}%</span>
+                      <span style={{ fontSize:9, color:C.muted, width:34 }}>{c.pct}%</span>
                     </div>
                   ))}
                 </div>
               </Card>
               <Card>
-                <SectionTitle>Condición del Equipo</SectionTitle>
-                <ResponsiveContainer width="100%" height={180}>
+                <SectionTitle>Condición</SectionTitle>
+                <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
                     <Pie data={[{name:'NUEVO',value:totalAli-reutilizados},{name:'USADO',value:reutilizados}]}
-                      cx="50%" cy="50%" innerRadius={50} outerRadius={75} dataKey="value">
+                      cx="50%" cy="50%" innerRadius={40} outerRadius={60} dataKey="value">
                       <Cell fill={C.cyan} /><Cell fill={C.blue} />
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize:11, color:C.muted }} />
+                    <Legend wrapperStyle={{ fontSize:10, color:C.muted }} />
                   </PieChart>
                 </ResponsiveContainer>
               </Card>
             </div>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1.3fr 1fr', gap:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns: colMap, gap:14 }}>
               <Card>
-                <SectionTitle>Distribución Geográfica de Alistamientos</SectionTitle>
+                <SectionTitle>Distribución Geográfica</SectionTitle>
                 <MapaCiudades datos={datosMapa} />
-                <p style={{ fontSize:10, color:C.muted, marginTop:8, textAlign:'center' }}>
-                  El tamaño del punto es proporcional a la cantidad de alistamientos por ciudad
+                <p style={{ fontSize:9, color:C.muted, marginTop:6, textAlign:'center' }}>
+                  Tamaño proporcional a cantidad de alistamientos
                 </p>
               </Card>
               <Card>
-                <SectionTitle>Top 10 Clientes con Más Alistamientos</SectionTitle>
+                <SectionTitle>Top 10 Clientes</SectionTitle>
                 <TopClientes datos={porCliente} />
               </Card>
             </div>
 
             <Card>
               <SectionTitle>Comercial Encargado</SectionTitle>
-              <div style={{ display:'flex', flexDirection:'column', gap:10 }}>
+              <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                 {porComercial.map((c,i) => (
                   <div key={i}>
-                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:4 }}>
+                    <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
                       <span style={{ fontSize:11, color:C.text }}>{c.name}</span>
                       <span style={{ fontSize:11, color:C.blue, fontWeight:600 }}>{c.value} · {c.pct}%</span>
                     </div>
-                    <div style={{ height:6, background:C.s3, borderRadius:3, overflow:'hidden' }}>
+                    <div style={{ height:5, background:C.s3, borderRadius:3, overflow:'hidden' }}>
                       <div style={{ width:`${c.pct}%`, height:'100%', background:`linear-gradient(90deg, ${C.cyan}, ${C.blue})`, borderRadius:3 }} />
                     </div>
                   </div>
@@ -645,25 +685,25 @@ export default function App() {
                   <thead>
                     <tr style={{ borderBottom:`2px solid ${C.border}` }}>
                       {['Fecha','Cliente','Placa','Responsable','Tecnología','Ciudad','Comercial','Estado'].map(h => (
-                        <th key={h} style={{ padding:'10px', textAlign:'left', color:C.navy, fontWeight:700, whiteSpace:'nowrap' }}>{h}</th>
+                        <th key={h} style={{ padding:'8px 8px', textAlign:'left', color:C.navy, fontWeight:700, whiteSpace:'nowrap', fontSize:10 }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {aliFiltrada.slice(0,100).map((r,i) => (
                       <tr key={i} style={{ borderBottom:`1px solid ${C.border}`, background: i%2===0?'#FFFFFF':'#F8FAFC' }}>
-                        <td style={{ padding:'7px 10px', color:C.muted }}>{String(r['Marca temporal']||'').split(' ')[0]}</td>
-                        <td style={{ padding:'7px 10px', color:C.text, maxWidth:140, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r['NOMBRE CLIENTE']}</td>
-                        <td style={{ padding:'7px 10px', color:C.blue, fontWeight:600 }}>{r['IDENTIFICACIÓN DEL ACTIVO (PLACA)']}</td>
-                        <td style={{ padding:'7px 10px', color:C.muted }}>{r['RESPONSABLE']}</td>
-                        <td style={{ padding:'7px 10px', color:C.muted }}>{r['TIPO DE TECNOLOGÍA']}</td>
-                        <td style={{ padding:'7px 10px', color:C.muted }}>{r['CIUDAD DONDE SE VA A INSTALAR']}</td>
-                        <td style={{ padding:'7px 10px', color:C.muted }}>{r['COMERCIAL ENCARGADO']}</td>
-                        <td style={{ padding:'7px 10px' }}>
+                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10, whiteSpace:'nowrap' }}>{String(r['Marca temporal']||'').split(' ')[0]}</td>
+                        <td style={{ padding:'6px 8px', color:C.text, maxWidth:120, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontSize:10 }}>{r['NOMBRE CLIENTE']}</td>
+                        <td style={{ padding:'6px 8px', color:C.blue, fontWeight:600, fontSize:10 }}>{r['IDENTIFICACIÓN DEL ACTIVO (PLACA)']}</td>
+                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['RESPONSABLE']}</td>
+                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['TIPO DE TECNOLOGÍA']}</td>
+                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['CIUDAD DONDE SE VA A INSTALAR']}</td>
+                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['COMERCIAL ENCARGADO']}</td>
+                        <td style={{ padding:'6px 8px' }}>
                           <span style={{
                             background: r['ESTADO FINAL']==='APROBADO'?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)',
                             color: r['ESTADO FINAL']==='APROBADO'?'#059669':'#DC2626',
-                            padding:'2px 8px', borderRadius:20, fontSize:10, fontWeight:700
+                            padding:'2px 6px', borderRadius:20, fontSize:9, fontWeight:700
                           }}>{r['ESTADO FINAL']}</span>
                         </td>
                       </tr>
@@ -682,14 +722,17 @@ export default function App() {
 
         {/* ══════════ TRAZABILIDAD ══════════ */}
         {tab === 'trazabilidad' && (
-          <div style={{ display:'flex', flexDirection:'column', gap:24 }}>
+          <div style={{ display:'flex', flexDirection:'column', gap }}>
             <div>
-              <h1 style={{ fontSize:20, fontWeight:700, color:C.navy }}>Trazabilidad de Alistamientos e Instalaciones</h1>
-              <p style={{ fontSize:12, color:C.muted, marginTop:2 }}>Cruce Movidesk · Alistamientos · Servicios I&M</p>
+              <h1 style={{ fontSize: isMobile ? 16 : 20, fontWeight:700, color:C.navy }}>
+                Trazabilidad de Alistamientos e Instalaciones
+              </h1>
+              <p style={{ fontSize:11, color:C.muted, marginTop:2 }}>Cruce Movidesk · Alistamientos · Servicios I&M</p>
             </div>
 
-            <FilterBar onClear={() => { setFTrazCliente(''); setFTrazPlaca('');
-              setFTrazAlerta(''); setFTrazEstado(''); setFTrazDesde(''); setFTrazHasta('') }}
+            <FilterBar isMobile={isMobile}
+              onClear={() => { setFTrazCliente(''); setFTrazPlaca('');
+                setFTrazAlerta(''); setFTrazEstado(''); setFTrazDesde(''); setFTrazHasta('') }}
               count={trazFiltrada.length} active={trazActive}>
               <FInput  label="Cliente" placeholder="Buscar cliente..." value={fTrazCliente} setter={setFTrazCliente} />
               <FInput  label="Placa"   placeholder="Buscar placa..."   value={fTrazPlaca}   setter={setFTrazPlaca} />
@@ -699,52 +742,51 @@ export default function App() {
               <FDate   label="Hasta"   value={fTrazHasta}  setter={setFTrazHasta} />
             </FilterBar>
 
-            <div style={{ display:'grid', gridTemplateColumns:'repeat(6, 1fr)', gap:14 }}>
-              <KPI label="Total registros"      value={fmt(kpiTraz.total)}    accent={C.cyan} />
-              <KPI label="Trazabilidad completa" value={fmt(kpiTraz.completo)} sub={pct(kpiTraz.completo,kpiTraz.total)} accent={C.green} />
-              <KPI label="Sin alistamiento"      value={fmt(kpiTraz.sinAli)}   sub={pct(kpiTraz.sinAli,kpiTraz.total)}   accent={C.red} />
-              <KPI label="Pendiente instalación" value={fmt(kpiTraz.pendiente)}sub={pct(kpiTraz.pendiente,kpiTraz.total)} accent={C.yellow} />
-              <KPI label="Alerta ROJA"           value={fmt(kpiTraz.rojos)}    accent={C.red} />
-              <KPI label="Alerta AMARILLA"       value={fmt(kpiTraz.amarillos)} accent={C.yellow} />
+            <div style={{ display:'grid', gridTemplateColumns: col6, gap:10 }}>
+              <KPI label="Total"             value={fmt(kpiTraz.total)}     accent={C.cyan} />
+              <KPI label="Completo"          value={fmt(kpiTraz.completo)}  sub={pct(kpiTraz.completo,kpiTraz.total)}  accent={C.green} />
+              <KPI label="Sin alistamiento"  value={fmt(kpiTraz.sinAli)}    sub={pct(kpiTraz.sinAli,kpiTraz.total)}    accent={C.red} />
+              <KPI label="Pend. instalación" value={fmt(kpiTraz.pendiente)} sub={pct(kpiTraz.pendiente,kpiTraz.total)} accent={C.yellow} />
+              <KPI label="Alerta ROJA"       value={fmt(kpiTraz.rojos)}     accent={C.red} />
+              <KPI label="Alerta AMARILLA"   value={fmt(kpiTraz.amarillos)} accent={C.yellow} />
             </div>
 
-            {/* Top clientes trazabilidad */}
             <Card>
               <SectionTitle>Top 10 Clientes con Más Registros</SectionTitle>
               <TopClientes datos={porClienteTraz} />
             </Card>
 
-            <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
+            <div style={{ display:'grid', gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr', gap:14 }}>
               <Card>
                 <SectionTitle>Estado de Trazabilidad</SectionTitle>
                 <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                   {estadosTraz.map((e,i) => (
-                    <div key={i} style={{ display:'flex', alignItems:'center', gap:10 }}>
+                    <div key={i} style={{ display:'flex', alignItems:'center', gap:8 }}>
                       <div style={{ width:10, height:10, borderRadius:2, background:COLORES_ESTADO[e.name]||C.muted, flexShrink:0 }} />
                       <span style={{ fontSize:11, color:C.muted, flex:1 }}>{e.name}</span>
-                      <div style={{ width:120, height:14, background:C.s3, borderRadius:3, overflow:'hidden' }}>
+                      <div style={{ width:100, height:12, background:C.s3, borderRadius:3, overflow:'hidden' }}>
                         <div style={{ width:`${kpiTraz.total?(e.value/kpiTraz.total)*100:0}%`, height:'100%',
                           background:COLORES_ESTADO[e.name]||C.muted, borderRadius:3, opacity:0.8 }} />
                       </div>
-                      <span style={{ fontSize:11, color:C.text, width:36, textAlign:'right', fontWeight:600 }}>{e.value}</span>
+                      <span style={{ fontSize:11, color:C.text, width:30, textAlign:'right', fontWeight:600 }}>{e.value}</span>
                     </div>
                   ))}
                 </div>
               </Card>
               <Card>
-                <SectionTitle>Distribución por Nivel de Alerta</SectionTitle>
-                <ResponsiveContainer width="100%" height={200}>
+                <SectionTitle>Nivel de Alerta</SectionTitle>
+                <ResponsiveContainer width="100%" height={180}>
                   <PieChart>
                     <Pie data={[
                       {name:'ROJO',    value:kpiTraz.rojos},
                       {name:'AMARILLO',value:kpiTraz.amarillos},
                       {name:'VERDE',   value:trazFiltrada.filter(r=>r.nivel_alerta==='VERDE').length},
                       {name:'GRIS',    value:trazFiltrada.filter(r=>r.nivel_alerta==='GRIS').length},
-                    ]} cx="50%" cy="50%" innerRadius={55} outerRadius={80} dataKey="value">
+                    ]} cx="50%" cy="50%" innerRadius={45} outerRadius={65} dataKey="value">
                       <Cell fill={C.red}/><Cell fill={C.yellow}/><Cell fill={C.green}/><Cell fill={C.muted}/>
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize:11, color:C.muted }} />
+                    <Legend wrapperStyle={{ fontSize:10, color:C.muted }} />
                   </PieChart>
                 </ResponsiveContainer>
               </Card>
@@ -757,22 +799,22 @@ export default function App() {
                   <thead>
                     <tr style={{ borderBottom:`2px solid ${C.border}` }}>
                       {['Ticket','Placa','Cliente','Tecnología','Fecha Ali.','Fecha Inst.','Días','Estado','Alerta'].map(h => (
-                        <th key={h} style={{ padding:'10px', textAlign:'left', color:C.navy, fontWeight:700, whiteSpace:'nowrap' }}>{h}</th>
+                        <th key={h} style={{ padding:'8px 8px', textAlign:'left', color:C.navy, fontWeight:700, whiteSpace:'nowrap', fontSize:10 }}>{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody>
                     {trazFiltrada.slice(0,100).map((r,i) => (
                       <tr key={i} style={{ borderBottom:`1px solid ${C.border}`, background: i%2===0?'#FFFFFF':'#F8FAFC' }}>
-                        <td style={{ padding:'7px 10px', color:C.blue, fontWeight:600 }}>{r.ticket}</td>
-                        <td style={{ padding:'7px 10px', color:C.text }}>{r.placa}</td>
-                        <td style={{ padding:'7px 10px', color:C.text, maxWidth:160, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap' }}>{r.cliente}</td>
-                        <td style={{ padding:'7px 10px', color:C.muted }}>{r.tecnologia}</td>
-                        <td style={{ padding:'7px 10px', color:C.muted }}>{r.fecha_alistamiento||'—'}</td>
-                        <td style={{ padding:'7px 10px', color:C.muted }}>{r.fecha_instalacion||'—'}</td>
-                        <td style={{ padding:'7px 10px', color:C.text, fontWeight:600 }}>{r.dias_ali_inst||'—'}</td>
-                        <td style={{ padding:'7px 10px', color:C.muted, fontSize:10 }}>{r.estado_trazabilidad}</td>
-                        <td style={{ padding:'7px 10px' }}><AlertBadge nivel={r.nivel_alerta} /></td>
+                        <td style={{ padding:'6px 8px', color:C.blue, fontWeight:600, fontSize:10 }}>{r.ticket}</td>
+                        <td style={{ padding:'6px 8px', color:C.text, fontSize:10 }}>{r.placa}</td>
+                        <td style={{ padding:'6px 8px', color:C.text, maxWidth:120, overflow:'hidden', textOverflow:'ellipsis', whiteSpace:'nowrap', fontSize:10 }}>{r.cliente}</td>
+                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r.tecnologia}</td>
+                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10, whiteSpace:'nowrap' }}>{r.fecha_alistamiento||'—'}</td>
+                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:10, whiteSpace:'nowrap' }}>{r.fecha_instalacion||'—'}</td>
+                        <td style={{ padding:'6px 8px', color:C.text, fontWeight:600, fontSize:10 }}>{r.dias_ali_inst||'—'}</td>
+                        <td style={{ padding:'6px 8px', color:C.muted, fontSize:9 }}>{r.estado_trazabilidad}</td>
+                        <td style={{ padding:'6px 8px' }}><AlertBadge nivel={r.nivel_alerta} /></td>
                       </tr>
                     ))}
                   </tbody>
@@ -788,7 +830,7 @@ export default function App() {
         )}
       </div>
 
-      <div style={{ borderTop:`1px solid ${C.border}`, padding:'16px 32px',
+      <div style={{ borderTop:`1px solid ${C.border}`, padding:'14px 16px',
         textAlign:'center', fontSize:10, color:C.muted, marginTop:24, background:'#fff' }}>
         LAP Technologies · Dirección de Operaciones & Productividad
       </div>

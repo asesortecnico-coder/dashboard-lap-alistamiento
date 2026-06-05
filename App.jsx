@@ -41,11 +41,11 @@ const CIUDAD_COORDS = {
 }
 
 const ALERTA_CONFIG = [
-  { key:'ROJO',    color:'#EF4444', bg:'rgba(239,68,68,0.12)',
+  { key:'ROJO',    color:'#DC2626', bg:'rgba(239,68,68,0.12)',
     desc:'Sin alistamiento previo, o pendiente de instalación más de 29 días.' },
-  { key:'AMARILLO',color:'#F59E0B', bg:'rgba(245,158,11,0.12)',
+  { key:'AMARILLO',color:'#D97706', bg:'rgba(245,158,11,0.12)',
     desc:'Registro tardío, o pendiente de instalación entre 18 y 29 días.' },
-  { key:'VERDE',   color:'#10B981', bg:'rgba(16,185,129,0.12)',
+  { key:'VERDE',   color:'#059669', bg:'rgba(16,185,129,0.12)',
     desc:'Trazabilidad completa: alistamiento e instalación correctamente registrados.' },
   { key:'GRIS',    color:'#6B7280', bg:'rgba(107,114,128,0.12)',
     desc:'Solo en Movidesk: sin alistamiento ni instalación en I&M.' },
@@ -277,25 +277,33 @@ function AlertBadge({nivel}) {
   return <span style={{background:cfg.bg,color:cfg.color,padding:'2px 8px',borderRadius:20,fontSize:10,fontWeight:700}}>{nivel||'GRIS'}</span>
 }
 
-function TopClientes({datos}) {
+function TopClientes({datos, activeCliente, onClickCliente}) {
   if (!datos.length) return <p style={{color:C.muted,fontSize:12}}>Sin datos</p>
   const max = datos[0].value
   return (
     <div style={{display:'flex',flexDirection:'column',gap:8,marginTop:4}}>
-      {datos.map((c,i)=>(
-        <div key={i} style={{display:'flex',alignItems:'center',gap:6}}>
-          <span style={{fontSize:10,color:C.muted,width:20,textAlign:'right',fontWeight:700,flexShrink:0}}>{i+1}.</span>
-          <span style={{fontSize:10,color:C.text,width:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flexShrink:0}}>{c.name}</span>
-          <div style={{flex:1,height:16,background:C.s3,borderRadius:4,overflow:'hidden'}}>
-            <div style={{width:`${max?(c.value/max)*100:0}%`,height:'100%',borderRadius:4,
-              background:i===0?`linear-gradient(90deg,${C.cyan},${C.blue})`
-                :i<3?`linear-gradient(90deg,${C.blue},#3b82f6)`
-                :`linear-gradient(90deg,#3b82f6,${C.cyanL})`}} />
+      {datos.map((c,i)=>{
+        const activo = activeCliente===c.name
+        return(
+          <div key={i} onClick={()=>onClickCliente&&onClickCliente(c.name)}
+            style={{display:'flex',alignItems:'center',gap:6,
+              cursor:onClickCliente?'pointer':'default',
+              opacity:activeCliente&&!activo?0.35:1,
+              borderRadius:6,padding:'2px 4px',
+              background:activo?'rgba(0,180,216,0.08)':'transparent'}}>
+            <span style={{fontSize:10,color:C.muted,width:20,textAlign:'right',fontWeight:700,flexShrink:0}}>{i+1}.</span>
+            <span style={{fontSize:10,color:activo?C.blue:C.text,width:140,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',flexShrink:0,fontWeight:activo?700:400}}>{c.name}</span>
+            <div style={{flex:1,height:16,background:C.s3,borderRadius:4,overflow:'hidden'}}>
+              <div style={{width:`${max?(c.value/max)*100:0}%`,height:'100%',borderRadius:4,
+                background:activo?C.cyan:i===0?`linear-gradient(90deg,${C.cyan},${C.blue})`
+                  :i<3?`linear-gradient(90deg,${C.blue},#3b82f6)`
+                  :`linear-gradient(90deg,#3b82f6,${C.cyanL})`}} />
+            </div>
+            <span style={{fontSize:11,color:C.navy,fontWeight:700,width:26,textAlign:'right',flexShrink:0}}>{c.value}</span>
+            <span style={{fontSize:10,color:C.muted,width:36,textAlign:'right',flexShrink:0}}>{c.pct}%</span>
           </div>
-          <span style={{fontSize:11,color:C.navy,fontWeight:700,width:26,textAlign:'right',flexShrink:0}}>{c.value}</span>
-          <span style={{fontSize:10,color:C.muted,width:36,textAlign:'right',flexShrink:0}}>{c.pct}%</span>
-        </div>
-      ))}
+        )
+      })}
     </div>
   )
 }
@@ -675,14 +683,17 @@ export default function App() {
               <Card>
                 <SectionTitle>Alistamientos por Mes</SectionTitle>
                 <ResponsiveContainer width="100%" height={200}>
-                  <BarChart data={porMes} barSize={18}>
+                  <BarChart data={porMes} barSize={18}
+                    onClick={(data)=>{ if(data?.activeLabel) toggleClickAli('mes',data.activeLabel) }}>
                     <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
                     <XAxis dataKey="mes" tick={{fill:C.muted,fontSize:10}} axisLine={false} tickLine={false} />
                     <YAxis tick={{fill:C.muted,fontSize:10}} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{fontSize:10,color:C.muted}} />
-                    <Bar dataKey="claro" name="CLARO" fill={C.cyan} radius={[4,4,0,0]} />
-                    <Bar dataKey="movistar" name="MOVISTAR" fill={C.blue} radius={[4,4,0,0]} />
+                    <Bar dataKey="claro" name="CLARO" fill={C.cyan} radius={[4,4,0,0]}
+                      opacity={clickAli.mes?0.7:1} style={{cursor:'pointer'}} />
+                    <Bar dataKey="movistar" name="MOVISTAR" fill={C.blue} radius={[4,4,0,0]}
+                      opacity={clickAli.mes?0.7:1} style={{cursor:'pointer'}} />
                   </BarChart>
                 </ResponsiveContainer>
               </Card>
@@ -775,7 +786,9 @@ export default function App() {
               </Card>
               <Card>
                 <SectionTitle>Top 10 Clientes</SectionTitle>
-                <TopClientes datos={porCliente} />
+                <TopClientes datos={porCliente}
+                  activeCliente={clickAli.cliente}
+                  onClickCliente={(name)=>toggleClickAli('cliente',name)} />
               </Card>
             </div>
 
@@ -816,9 +829,13 @@ export default function App() {
                   </thead>
                   <tbody>
                     {aliFiltrada.slice(0,100).map((r,i)=>(
-                      <tr key={i} style={{borderBottom:`1px solid ${C.border}`,background:i%2===0?'#FFFFFF':'#F8FAFC'}}>
+                      <tr key={i}
+                        onClick={()=>toggleClickAli('cliente',r['NOMBRE CLIENTE']||'')}
+                        style={{borderBottom:`1px solid ${C.border}`,cursor:'pointer',
+                          background:clickAli.cliente&&clickAli.cliente===(r['NOMBRE CLIENTE']||'')?'rgba(0,180,216,0.06)':i%2===0?'#FFFFFF':'#F8FAFC',
+                          opacity:clickAli.cliente&&clickAli.cliente!==(r['NOMBRE CLIENTE']||'')?0.5:1}}>
                         <td style={{padding:'6px 8px',color:C.muted,fontSize:10,whiteSpace:'nowrap'}}>{String(r['Marca temporal']||'').split(' ')[0]}</td>
-                        <td style={{padding:'6px 8px',color:C.text,maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:10}}>{r['NOMBRE CLIENTE']}</td>
+                        <td style={{padding:'6px 8px',color:C.blue,maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:10,fontWeight:600}}>{r['NOMBRE CLIENTE']}</td>
                         <td style={{padding:'6px 8px',color:C.blue,fontWeight:600,fontSize:10}}>{r['IDENTIFICACIÓN DEL ACTIVO (PLACA)']}</td>
                         <td style={{padding:'6px 8px',color:C.muted,fontSize:10}}>{r['ICC/ID DE LA SIM CARD']||'—'}</td>
                         <td style={{padding:'6px 8px',color:C.muted,fontSize:10}}>{r['IMEI DE EQUIPO']||'—'}</td>
@@ -919,7 +936,9 @@ export default function App() {
 
             <Card>
               <SectionTitle>Top 10 Clientes con Más Registros</SectionTitle>
-              <TopClientes datos={porClienteTraz} />
+              <TopClientes datos={porClienteTraz}
+                activeCliente={clickTraz.cliente}
+                onClickCliente={(name)=>toggleClickTraz('cliente',name)} />
             </Card>
 
             <div style={{display:'grid',gridTemplateColumns:isMobile?'1fr':'1fr 1.4fr',gap:14}}>
@@ -967,10 +986,14 @@ export default function App() {
                   </thead>
                   <tbody>
                     {trazFiltrada.slice(0,100).map((r,i)=>(
-                      <tr key={i} style={{borderBottom:`1px solid ${C.border}`,background:i%2===0?'#FFFFFF':'#F8FAFC'}}>
+                      <tr key={i}
+                        onClick={()=>toggleClickTraz('cliente',r.cliente||'')}
+                        style={{borderBottom:`1px solid ${C.border}`,cursor:'pointer',
+                          background:clickTraz.cliente&&clickTraz.cliente===(r.cliente||'')?'rgba(0,180,216,0.06)':i%2===0?'#FFFFFF':'#F8FAFC',
+                          opacity:clickTraz.cliente&&clickTraz.cliente!==(r.cliente||'')?0.5:1}}>
                         <td style={{padding:'6px 8px',color:C.blue,fontWeight:600,fontSize:10}}>{r.ticket}</td>
                         <td style={{padding:'6px 8px',color:C.text,fontSize:10}}>{r.placa}</td>
-                        <td style={{padding:'6px 8px',color:C.text,maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:10}}>{r.cliente}</td>
+                        <td style={{padding:'6px 8px',color:C.blue,maxWidth:120,overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap',fontSize:10,fontWeight:600}}>{r.cliente}</td>
                         <td style={{padding:'6px 8px',color:C.muted,fontSize:10}}>{r.tecnologia}</td>
                         <td style={{padding:'6px 8px',color:C.muted,fontSize:10}}>{r.iccid||'—'}</td>
                         <td style={{padding:'6px 8px',color:C.muted,fontSize:10}}>{r.imei||'—'}</td>

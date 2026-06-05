@@ -546,7 +546,8 @@ export default function App() {
       (!clickTraz.estado||r.estado_trazabilidad===clickTraz.estado)&&
       (!clickTraz.ciudad||r.ciudad_destino===clickTraz.ciudad)&&
       (!clickTraz.tecnologia||r.tecnologia===clickTraz.tecnologia)&&
-      (!clickTraz.comercial||r.comercial===clickTraz.comercial)
+      (!clickTraz.comercial||r.comercial===clickTraz.comercial)&&
+      (!clickTraz.cliente||(r.cliente||'')===(clickTraz.cliente||''))
     )
   }),[traz,fTrazCliente,fTrazPlaca,fTrazAlerta,fTrazEstado,fTrazDesde,fTrazHasta,clickTraz])
 

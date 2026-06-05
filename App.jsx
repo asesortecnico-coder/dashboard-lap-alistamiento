@@ -679,7 +679,7 @@ export default function App() {
               <KPI label="Aprobados"         value={fmt(aprobados)}          sub={pct(aprobados,totalAli)}    accent={C.green} />
               <KPI label="Aprobación %"      value={pct(aprobados,totalAli)} accent={C.green} />
               <KPI label="Reutilizados"      value={fmt(reutilizados)}       sub={pct(reutilizados,totalAli)} accent={C.yellow} />
-              <KPI label="Tiempo Promedio" value={`${tiempoPromedio} minuto`} accent={C.blue} />
+              <KPI label="Tiempo Promedio" value={`${tiempoPromedio} Min`} accent={C.blue} />
             </div>
 
             <div style={{display:'grid',gridTemplateColumns:col2,gap:14}}>

@@ -13,7 +13,7 @@ const C = {
 }
 
 const fmt = n => (n ?? 0).toLocaleString('es-CO')
-const pct = (a, b) => b ? ((a / b) * 100).toFixed(1) + ' %' : '0 %'
+const pct = (a, b) => { if (!b) return '0 %'; const v = (a / b) * 100; return (v % 1 === 0 ? v.toFixed(0) : v.toFixed(1)) + ' %' }
 
 const MES_MAP = {
   '01':'Ene','02':'Feb','03':'Mar','04':'Abr','05':'May','06':'Jun',

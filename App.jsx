@@ -41,11 +41,11 @@ const CIUDAD_COORDS = {
 }
 
 const ALERTA_CONFIG = [
-  { key:'ROJO',    color:'#DC2626', bg:'rgba(239,68,68,0.12)',
+  { key:'ROJO',    color:'#EF4444', bg:'rgba(239,68,68,0.12)',
     desc:'Sin alistamiento previo, o pendiente de instalación más de 29 días.' },
-  { key:'AMARILLO',color:'#D97706', bg:'rgba(245,158,11,0.12)',
+  { key:'AMARILLO',color:'#F59E0B', bg:'rgba(245,158,11,0.12)',
     desc:'Registro tardío, o pendiente de instalación entre 18 y 29 días.' },
-  { key:'VERDE',   color:'#059669', bg:'rgba(16,185,129,0.12)',
+  { key:'VERDE',   color:'#10B981', bg:'rgba(16,185,129,0.12)',
     desc:'Trazabilidad completa: alistamiento e instalación correctamente registrados.' },
   { key:'GRIS',    color:'#6B7280', bg:'rgba(107,114,128,0.12)',
     desc:'Solo en Movidesk: sin alistamiento ni instalación en I&M.' },

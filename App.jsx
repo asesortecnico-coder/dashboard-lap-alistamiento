@@ -694,16 +694,18 @@ export default function App() {
                     <YAxis tick={{fill:C.muted,fontSize:10}} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{fontSize:10,color:C.muted}} />
-                    <Bar dataKey="claro" name="CLARO" radius={[4,4,0,0]}>
-                      {porMes.map((entry,idx)=>(
-                        <Cell key={idx} fill={C.cyan}
-                          opacity={clickAli.mes&&clickAli.mes!==entry.mes?0.25:1} />
+                    <Bar dataKey="claro" name="CLARO" fill={C.cyan} radius={[4,4,0,0]}
+                      fillOpacity={clickAli.mes?0.3:1}>
+                      {porMes.map((entry,i)=>(
+                        <Cell key={i} fill={C.cyan}
+                          fillOpacity={clickAli.mes?(clickAli.mes===entry.mes?1:0.2):1} />
                       ))}
                     </Bar>
-                    <Bar dataKey="movistar" name="MOVISTAR" radius={[4,4,0,0]}>
-                      {porMes.map((entry,idx)=>(
-                        <Cell key={idx} fill={C.blue}
-                          opacity={clickAli.mes&&clickAli.mes!==entry.mes?0.25:1} />
+                    <Bar dataKey="movistar" name="MOVISTAR" fill={C.blue} radius={[4,4,0,0]}
+                      fillOpacity={clickAli.mes?0.3:1}>
+                      {porMes.map((entry,i)=>(
+                        <Cell key={i} fill={C.blue}
+                          fillOpacity={clickAli.mes?(clickAli.mes===entry.mes?1:0.2):1} />
                       ))}
                     </Bar>
                   </BarChart>

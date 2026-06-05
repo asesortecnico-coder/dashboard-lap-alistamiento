@@ -454,7 +454,9 @@ export default function App() {
       (!clickAli.operador||r['OPERADOR SIM CARD']===clickAli.operador)&&
       (!clickAli.comercial||r['COMERCIAL ENCARGADO']===clickAli.comercial)&&
       (!clickAli.responsable||r['RESPONSABLE']===clickAli.responsable)&&
-      (!clickAli.estado||r['ESTADO FINAL']===clickAli.estado)
+      (!clickAli.estado||r['ESTADO FINAL']===clickAli.estado)&&
+      (!clickAli.cliente||(r['NOMBRE CLIENTE']||'')===(clickAli.cliente||''))&&
+      (!clickAli.mes||parseMes(r['Marca temporal'])===clickAli.mes)
     )
   }),[ali,fAliCliente,fAliPlaca,fAliTecnico,fAliTecnologia,fAliCiudad,fAliComercial,fAliEstado,fAliDesde,fAliHasta,clickAli])
 

@@ -931,6 +931,10 @@ export default function App() {
                     <span style={{fontSize:9,color:C.muted}}>🔧 Servicios I&M</span>
                     <span style={{fontSize:9,fontWeight:700,color:C.text}}>{fmt(kpiTraz.conInst)}</span>
                   </div>
+                  <div style={{display:'flex',justifyContent:'space-between',borderTop:`1px dashed ${C.border}`,paddingTop:3,marginTop:1}}>
+                    <span style={{fontSize:9,color:C.red}}>⚠️ Sin ticket</span>
+                    <span style={{fontSize:9,fontWeight:700,color:C.red}}>{fmt(ali.length - kpiTraz.conAli)}</span>
+                  </div>
                 </div>
               </KPI>
 

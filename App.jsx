@@ -40,37 +40,24 @@ const CIUDAD_COORDS = {
   'QUIBDÓ': [5.6919, -76.6583], 'BUCARAMANGA/BOGOTA': [6.0, -73.7],
 }
 
-// ── Definiciones de alerta (según lógica de n8n) ──────────────
-const ALERTA_INFO = {
-  ROJO: {
-    color: '#DC2626', bg: 'rgba(239,68,68,0.12)',
-    titulo: 'ROJO',
-    desc: 'Sin alistamiento previo a la instalación, o pendiente de instalación por más de 29 días.'
-  },
-  AMARILLO: {
-    color: '#D97706', bg: 'rgba(245,158,11,0.12)',
-    titulo: 'AMARILLO',
-    desc: 'Registro tardío (alistamiento posterior a instalación), o pendiente de instalación entre 18 y 29 días.'
-  },
-  VERDE: {
-    color: '#059669', bg: 'rgba(16,185,129,0.12)',
-    titulo: 'VERDE',
-    desc: 'Trazabilidad completa: alistamiento e instalación registrados correctamente, o pendiente menos de 18 días.'
-  },
-  GRIS: {
-    color: '#6B7280', bg: 'rgba(107,114,128,0.12)',
-    titulo: 'GRIS',
-    desc: 'Solo en Movidesk: sin alistamiento ni registro de instalación en I&M.'
-  },
-}
+const ALERTA_CONFIG = [
+  { key:'ROJO',    color:'#DC2626', bg:'rgba(239,68,68,0.12)',
+    icon:'🔴', desc:'Instalación registrada sin alistamiento previo, o pendiente más de 29 días.' },
+  { key:'AMARILLO',color:'#D97706', bg:'rgba(245,158,11,0.12)',
+    icon:'🟡', desc:'Alistado sin instalación entre 18-29 días, o registro tardío.' },
+  { key:'VERDE',   color:'#059669', bg:'rgba(16,185,129,0.12)',
+    icon:'🟢', desc:'Trazabilidad completa: alistamiento e instalación correctamente registrados.' },
+  { key:'GRIS',    color:'#6B7280', bg:'rgba(107,114,128,0.12)',
+    icon:'⚫', desc:'Solo en Movidesk: sin alistamiento ni instalación en I&M.' },
+]
 
-const ESTADO_INFO = {
-  'COMPLETO': { color: C.green, desc: 'Equipo con alistamiento y con instalación registrada correctamente.' },
-  'SIN ALISTAMIENTO': { color: C.red, desc: 'Instalación registrada en I&M sin alistamiento previo en el formulario.' },
-  'PENDIENTE INSTALACIÓN': { color: C.yellow, desc: 'Equipo alistado pero aún no tiene registro de instalación en I&M.' },
-  'REGISTRO TARDÍO': { color: C.blue, desc: 'El alistamiento fue registrado después de la fecha de instalación.' },
-  'SOLO EN MOVIDESK': { color: C.muted, desc: 'Ticket en Movidesk sin alistamiento ni servicio I&M asociado.' },
-}
+const ESTADO_CONFIG = [
+  { key:'COMPLETO',              color:C.green,  desc:'El ticket tiene alistamiento e instalación correctamente registrados.' },
+  { key:'SIN ALISTAMIENTO',      color:C.red,    desc:'Existe instalación o gestión asociada pero no se encontró registro de alistamiento.' },
+  { key:'PENDIENTE INSTALACIÓN', color:C.yellow, desc:'El equipo fue alistado pero aún no existe instalación registrada.' },
+  { key:'REGISTRO TARDÍO',       color:C.blue,   desc:'El alistamiento fue registrado después de la fecha de instalación.' },
+  { key:'SOLO EN MOVIDESK',      color:C.muted,  desc:'Ticket en Movidesk sin alistamiento ni servicio I&M asociado.' },
+]
 
 function useIsMobile() {
   const [isMobile, setIsMobile] = useState(window.innerWidth < 768)
@@ -115,14 +102,14 @@ function parseFechaDate(f) {
 
 function KPI({ label, value, sub, accent = C.cyan, children }) {
   return (
-    <div style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12,
-      padding: '16px 18px', display: 'flex', flexDirection: 'column', gap: 4,
-      position: 'relative', overflow: 'hidden', boxShadow: '0 2px 8px rgba(30,111,191,0.08)' }}>
-      <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: 3,
-        background: `linear-gradient(90deg, ${accent}, transparent)` }} />
-      <span style={{ fontSize: 10, color: C.muted, textTransform: 'uppercase', letterSpacing: 1 }}>{label}</span>
-      <span style={{ fontSize: 24, fontWeight: 700, color: C.text, lineHeight: 1 }}>{value}</span>
-      {sub && <span style={{ fontSize: 10, color: C.muted }}>{sub}</span>}
+    <div style={{ background:C.s2, border:`1px solid ${C.border}`, borderRadius:12,
+      padding:'16px 18px', display:'flex', flexDirection:'column', gap:4,
+      position:'relative', overflow:'hidden', boxShadow:'0 2px 8px rgba(30,111,191,0.08)' }}>
+      <div style={{ position:'absolute', top:0, left:0, right:0, height:3,
+        background:`linear-gradient(90deg, ${accent}, transparent)` }} />
+      <span style={{ fontSize:10, color:C.muted, textTransform:'uppercase', letterSpacing:1 }}>{label}</span>
+      <span style={{ fontSize:24, fontWeight:700, color:C.text, lineHeight:1 }}>{value}</span>
+      {sub && <span style={{ fontSize:10, color:C.muted }}>{sub}</span>}
       {children}
     </div>
   )
@@ -130,9 +117,9 @@ function KPI({ label, value, sub, accent = C.cyan, children }) {
 
 function SectionTitle({ children }) {
   return (
-    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 14 }}>
-      <div style={{ width: 3, height: 16, background: C.cyan, borderRadius: 2 }} />
-      <span style={{ fontSize: 11, fontWeight: 600, color: C.muted, textTransform: 'uppercase', letterSpacing: 1.5 }}>
+    <div style={{ display:'flex', alignItems:'center', gap:10, marginBottom:14 }}>
+      <div style={{ width:3, height:16, background:C.cyan, borderRadius:2 }} />
+      <span style={{ fontSize:11, fontWeight:600, color:C.muted, textTransform:'uppercase', letterSpacing:1.5 }}>
         {children}
       </span>
     </div>
@@ -141,18 +128,17 @@ function SectionTitle({ children }) {
 
 function Card({ children, style = {} }) {
   return (
-    <div style={{ background: C.s2, border: `1px solid ${C.border}`, borderRadius: 12,
-      padding: '16px 16px 14px', boxShadow: '0 2px 8px rgba(30,111,191,0.08)', ...style }}>
+    <div style={{ background:C.s2, border:`1px solid ${C.border}`, borderRadius:12,
+      padding:'16px 16px 14px', boxShadow:'0 2px 8px rgba(30,111,191,0.08)', ...style }}>
       {children}
     </div>
   )
 }
 
-// Badge de filtro activo
 function ActiveChip({ label, onRemove }) {
   return (
     <span style={{ display:'inline-flex', alignItems:'center', gap:4,
-      background:`rgba(0,180,216,0.12)`, color:C.cyan, border:`1px solid rgba(0,180,216,0.3)`,
+      background:'rgba(0,180,216,0.12)', color:C.cyan, border:'1px solid rgba(0,180,216,0.3)',
       borderRadius:20, padding:'3px 10px', fontSize:10, fontWeight:600 }}>
       {label}
       <button onClick={onRemove} style={{ background:'none', border:'none', cursor:'pointer',
@@ -162,31 +148,31 @@ function ActiveChip({ label, onRemove }) {
 }
 
 const inputStyle = {
-  background: '#F4F6FA', border: `1px solid rgba(30,111,191,0.2)`,
-  borderRadius: 7, padding: '8px 10px', fontSize: 12,
-  color: '#1A2B4A', outline: 'none', width: '100%', boxSizing: 'border-box'
+  background:'#F4F6FA', border:'1px solid rgba(30,111,191,0.2)',
+  borderRadius:7, padding:'8px 10px', fontSize:12,
+  color:'#1A2B4A', outline:'none', width:'100%', boxSizing:'border-box'
 }
 
 function FilterBar({ children, onClear, count, active, isMobile }) {
   const [open, setOpen] = useState(!isMobile)
   useEffect(() => { setOpen(!isMobile) }, [isMobile])
   return (
-    <Card style={{ padding: '14px 16px' }}>
-      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom: open ? 12 : 0 }}>
+    <Card style={{ padding:'14px 16px' }}>
+      <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', marginBottom:open?12:0 }}>
         <div style={{ display:'flex', alignItems:'center', gap:8 }}>
           {isMobile && (
             <button onClick={() => setOpen(!open)} style={{ background:'none', border:'none',
               fontSize:16, cursor:'pointer', padding:0, color:C.navy }}>
-              {open ? '▲' : '▼'}
+              {open?'▲':'▼'}
             </button>
           )}
           <span style={{ fontSize:11, fontWeight:700, color:C.navy, textTransform:'uppercase', letterSpacing:1 }}>
             🔍 Filtros
           </span>
           {active && (
-            <span style={{ background:`rgba(0,180,216,0.12)`, color:C.cyan,
+            <span style={{ background:'rgba(0,180,216,0.12)', color:C.cyan,
               fontSize:10, fontWeight:700, padding:'2px 8px', borderRadius:20 }}>
-              {count} resultado{count !== 1 ? 's' : ''}
+              {count} resultado{count!==1?'s':''}
             </span>
           )}
         </div>
@@ -197,7 +183,7 @@ function FilterBar({ children, onClear, count, active, isMobile }) {
       </div>
       {open && (
         <div style={{ display:'grid',
-          gridTemplateColumns: isMobile ? '1fr 1fr' : 'repeat(auto-fit, minmax(150px, 1fr))',
+          gridTemplateColumns: isMobile?'1fr 1fr':'repeat(auto-fit, minmax(150px, 1fr))',
           gap:8, alignItems:'end' }}>
           {children}
         </div>
@@ -220,8 +206,8 @@ function FSelect({ label, value, setter, options, placeholder }) {
     <div>
       <div style={{ fontSize:10, color:C.muted, marginBottom:4, fontWeight:600 }}>{label}</div>
       <select value={value} onChange={e => setter(e.target.value)}
-        style={{ ...inputStyle, color: value ? '#1A2B4A' : '#5A7A9C' }}>
-        <option value="">{placeholder || 'Todos'}</option>
+        style={{ ...inputStyle, color:value?'#1A2B4A':'#5A7A9C' }}>
+        <option value="">{placeholder||'Todos'}</option>
         {options.map(o => <option key={o} value={o}>{o}</option>)}
       </select>
     </div>
@@ -242,22 +228,22 @@ function MapaCiudades({ datos }) {
   useEffect(() => {
     if (!document.getElementById('leaflet-css')) {
       const link = document.createElement('link')
-      link.id = 'leaflet-css'; link.rel = 'stylesheet'
-      link.href = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'
+      link.id='leaflet-css'; link.rel='stylesheet'
+      link.href='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css'
       document.head.appendChild(link)
     }
     const initMap = () => {
       const L = window.L
       const container = document.getElementById(mapId)
       if (!container || !L) return
-      if (container._leaflet_id) { container._leaflet_id = null; container.innerHTML = '' }
-      const map = L.map(mapId, { zoomControl:true, scrollWheelZoom:false }).setView([4.5, -74.0], 5)
+      if (container._leaflet_id) { container._leaflet_id=null; container.innerHTML='' }
+      const map = L.map(mapId, { zoomControl:true, scrollWheelZoom:false }).setView([4.5,-74.0],5)
       L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution:'© OpenStreetMap' }).addTo(map)
-      const maxVal = Math.max(...datos.map(d => d.value), 1)
+      const maxVal = Math.max(...datos.map(d=>d.value),1)
       datos.forEach(({ name, value }) => {
         const coords = CIUDAD_COORDS[name.toUpperCase().trim()]
         if (!coords) return
-        const radio = 8 + (value / maxVal) * 24
+        const radio = 8 + (value/maxVal)*24
         L.circleMarker(coords, { radius:radio, fillColor:'#00B4D8', color:'#1D2B5F', weight:2, opacity:0.9, fillOpacity:0.7 })
           .addTo(map)
           .bindPopup(`<div style="font-family:sans-serif;font-size:13px"><b style="color:#1D2B5F">${name}</b><br/><span style="color:#5A7A9C">Alistamientos: </span><b style="color:#00B4D8">${value}</b></div>`)
@@ -265,17 +251,17 @@ function MapaCiudades({ datos }) {
     }
     if (window.L) { initMap() } else {
       const script = document.createElement('script')
-      script.src = 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
-      script.onload = initMap
+      script.src='https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'
+      script.onload=initMap
       document.head.appendChild(script)
     }
-    return () => { const c = document.getElementById(mapId); if (c) c.innerHTML = '' }
+    return () => { const c=document.getElementById(mapId); if(c) c.innerHTML='' }
   }, [datos])
   return <div id={mapId} style={{ height:320, borderRadius:8, overflow:'hidden', border:`1px solid ${C.border}`, zIndex:0 }} />
 }
 
 const CustomTooltip = ({ active, payload, label }) => {
-  if (!active || !payload?.length) return null
+  if (!active||!payload?.length) return null
   return (
     <div style={{ background:'#fff', border:`1px solid ${C.border}`, borderRadius:8,
       padding:'8px 12px', fontSize:12, color:C.text, boxShadow:'0 4px 12px rgba(0,0,0,0.1)' }}>
@@ -286,8 +272,8 @@ const CustomTooltip = ({ active, payload, label }) => {
 }
 
 function AlertBadge({ nivel }) {
-  const s = ALERTA_INFO[nivel] || ALERTA_INFO.GRIS
-  return <span style={{ background:s.bg, color:s.color, padding:'2px 8px', borderRadius:20, fontSize:10, fontWeight:700 }}>{nivel || 'GRIS'}</span>
+  const cfg = ALERTA_CONFIG.find(a=>a.key===nivel) || ALERTA_CONFIG[3]
+  return <span style={{ background:cfg.bg, color:cfg.color, padding:'2px 8px', borderRadius:20, fontSize:10, fontWeight:700 }}>{nivel||'GRIS'}</span>
 }
 
 function TopClientes({ datos }) {
@@ -313,41 +299,97 @@ function TopClientes({ datos }) {
   )
 }
 
-// Leyenda de alertas
-function LeyendaAlertas() {
+// Tarjeta de Significado de Estados (reemplaza Fuentes de Datos)
+function SignificadoEstados() {
   return (
-    <div style={{ marginTop:12, borderTop:`1px solid ${C.border}`, paddingTop:12 }}>
-      <p style={{ fontSize:10, color:C.muted, fontWeight:700, marginBottom:8, textTransform:'uppercase', letterSpacing:1 }}>
-        Definición de niveles de alerta
-      </p>
-      {Object.entries(ALERTA_INFO).map(([key, info]) => (
-        <div key={key} style={{ display:'flex', gap:8, marginBottom:6, alignItems:'flex-start' }}>
-          <span style={{ background:info.bg, color:info.color, padding:'1px 7px', borderRadius:20,
-            fontSize:9, fontWeight:700, flexShrink:0, marginTop:1 }}>{info.titulo}</span>
-          <span style={{ fontSize:10, color:C.muted, lineHeight:1.4 }}>{info.desc}</span>
-        </div>
-      ))}
+    <div style={{ background:C.s2, border:`1px solid ${C.border}`, borderRadius:12,
+      padding:'16px 18px', boxShadow:'0 2px 8px rgba(30,111,191,0.08)', position:'relative', overflow:'hidden' }}>
+      <div style={{ position:'absolute', top:0, left:0, right:0, height:3,
+        background:`linear-gradient(90deg, ${C.green}, transparent)` }} />
+      <span style={{ fontSize:10, color:C.muted, textTransform:'uppercase', letterSpacing:1, fontWeight:700 }}>
+        Significado de los Estados
+      </span>
+      <div style={{ display:'flex', flexDirection:'column', gap:10, marginTop:12 }}>
+        {ESTADO_CONFIG.filter(e => e.key !== 'SOLO EN MOVIDESK').map(e => (
+          <div key={e.key} style={{ display:'flex', gap:8, alignItems:'flex-start' }}>
+            <div style={{ width:10, height:10, borderRadius:2, background:e.color, flexShrink:0, marginTop:2 }} />
+            <div>
+              <span style={{ fontSize:10, color:C.text, fontWeight:700 }}>{e.key}: </span>
+              <span style={{ fontSize:10, color:C.muted, lineHeight:1.4 }}>{e.desc}</span>
+            </div>
+          </div>
+        ))}
+      </div>
     </div>
   )
 }
 
-// Leyenda de estados de trazabilidad
-function LeyendaEstados() {
+// Gráfico de Nivel de Alerta mejorado
+function NivelAlertaCard({ datos, clickTraz, toggleClick }) {
+  const total = datos.reduce((s,d) => s+d.value, 0)
   return (
-    <div style={{ marginTop:10, borderTop:`1px solid ${C.border}`, paddingTop:10 }}>
-      <p style={{ fontSize:10, color:C.muted, fontWeight:700, marginBottom:8, textTransform:'uppercase', letterSpacing:1 }}>
-        Significado de cada estado
-      </p>
-      {Object.entries(ESTADO_INFO).map(([key, info]) => (
-        <div key={key} style={{ display:'flex', gap:8, marginBottom:5, alignItems:'flex-start' }}>
-          <div style={{ width:10, height:10, borderRadius:2, background:info.color, flexShrink:0, marginTop:2 }} />
-          <div>
-            <span style={{ fontSize:10, color:C.text, fontWeight:600 }}>{key}: </span>
-            <span style={{ fontSize:10, color:C.muted }}>{info.desc}</span>
-          </div>
+    <Card>
+      <SectionTitle>Nivel de Alerta</SectionTitle>
+      <div style={{ display:'flex', gap:16, flexWrap:'wrap' }}>
+        {/* Donut */}
+        <div style={{ flex:'0 0 180px' }}>
+          <ResponsiveContainer width={180} height={180}>
+            <PieChart>
+              <Pie data={datos} cx="50%" cy="50%" innerRadius={50} outerRadius={75}
+                dataKey="value" onClick={(d) => toggleClick('alerta', d.name)}>
+                {datos.map((d,i) => {
+                  const cfg = ALERTA_CONFIG.find(a=>a.key===d.name)
+                  return <Cell key={i} fill={cfg?.color||C.muted}
+                    opacity={clickTraz.alerta && clickTraz.alerta!==d.name ? 0.25 : 1}
+                    style={{ cursor:'pointer' }} />
+                })}
+              </Pie>
+              <Tooltip content={<CustomTooltip />} />
+            </PieChart>
+          </ResponsiveContainer>
         </div>
-      ))}
-    </div>
+
+        {/* Leyenda integrada con descripción */}
+        <div style={{ flex:1, display:'flex', flexDirection:'column', gap:10, justifyContent:'center', minWidth:200 }}>
+          {ALERTA_CONFIG.map(cfg => {
+            const dato = datos.find(d=>d.name===cfg.key)
+            const val = dato?.value || 0
+            const p = total ? ((val/total)*100).toFixed(0) : 0
+            const activo = clickTraz.alerta === cfg.key
+            return (
+              <div key={cfg.key}
+                onClick={() => toggleClick('alerta', cfg.key)}
+                style={{ display:'flex', gap:10, alignItems:'flex-start', cursor:'pointer',
+                  opacity: clickTraz.alerta && !activo ? 0.35 : 1,
+                  borderRadius:8, padding:'6px 8px',
+                  background: activo?cfg.bg:'transparent',
+                  border: activo?`1px solid ${cfg.color}20`:'1px solid transparent',
+                  transition:'all 0.15s' }}>
+                <div style={{ display:'flex', flexDirection:'column', alignItems:'center', gap:2, flexShrink:0 }}>
+                  <div style={{ width:12, height:12, borderRadius:'50%', background:cfg.color }} />
+                  <span style={{ fontSize:13 }}>{cfg.icon}</span>
+                </div>
+                <div style={{ flex:1 }}>
+                  <div style={{ display:'flex', justifyContent:'space-between', alignItems:'center', marginBottom:2 }}>
+                    <span style={{ fontSize:11, fontWeight:700, color:cfg.color }}>{cfg.key}</span>
+                    <span style={{ fontSize:12, fontWeight:700, color:C.text }}>{fmt(val)}
+                      <span style={{ fontSize:10, color:C.muted, fontWeight:400 }}> · {p}%</span>
+                    </span>
+                  </div>
+                  <div style={{ height:4, background:C.s3, borderRadius:2, overflow:'hidden', marginBottom:3 }}>
+                    <div style={{ width:`${p}%`, height:'100%', background:cfg.color, borderRadius:2 }} />
+                  </div>
+                  <p style={{ fontSize:9, color:C.muted, lineHeight:1.4, margin:0 }}>{cfg.desc}</p>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      </div>
+      <p style={{ fontSize:9, color:C.muted, marginTop:8, textAlign:'center' }}>
+        Haz clic en cualquier nivel para filtrar todo el dashboard
+      </p>
+    </Card>
   )
 }
 
@@ -360,7 +402,6 @@ export default function App() {
   const [loading, setLoading] = useState(true)
   const [tab, setTab]   = useState('alistamiento')
 
-  // ── Filtros de texto/select para Alistamiento ──
   const [fAliCliente,    setFAliCliente]    = useState('')
   const [fAliPlaca,      setFAliPlaca]      = useState('')
   const [fAliTecnico,    setFAliTecnico]    = useState('')
@@ -370,20 +411,15 @@ export default function App() {
   const [fAliEstado,     setFAliEstado]     = useState('')
   const [fAliDesde,      setFAliDesde]      = useState('')
   const [fAliHasta,      setFAliHasta]      = useState('')
+  const [clickAli, setClickAli] = useState({})
 
-  // ── Filtros interactivos acumulables Alistamiento ──
-  const [clickAli, setClickAli] = useState({}) // { ciudad, tecnologia, operador, comercial, responsable }
-
-  // ── Filtros de texto/select para Trazabilidad ──
   const [fTrazCliente,   setFTrazCliente]   = useState('')
   const [fTrazPlaca,     setFTrazPlaca]     = useState('')
   const [fTrazAlerta,    setFTrazAlerta]    = useState('')
   const [fTrazEstado,    setFTrazEstado]    = useState('')
   const [fTrazDesde,     setFTrazDesde]     = useState('')
   const [fTrazHasta,     setFTrazHasta]     = useState('')
-
-  // ── Filtros interactivos acumulables Trazabilidad ──
-  const [clickTraz, setClickTraz] = useState({}) // { alerta, estado, ciudad, tecnologia, comercial }
+  const [clickTraz, setClickTraz] = useState({})
 
   useEffect(() => {
     async function fetchAll(table) {
@@ -391,15 +427,15 @@ export default function App() {
       const PAGE = 1000
       while (true) {
         const { data, error } = await supabase.from(table).select('*').range(from, from+PAGE-1)
-        if (error || !data || data.length === 0) break
+        if (error||!data||data.length===0) break
         all = [...all, ...data]
-        if (data.length < PAGE) break
+        if (data.length<PAGE) break
         from += PAGE
       }
       return all
     }
     async function load() {
-      const [a, t] = await Promise.all([
+      const [a,t] = await Promise.all([
         fetchAll('alistamientos_preoperacionales'),
         fetchAll('trazabilidad_alistamientos'),
       ])
@@ -408,26 +444,27 @@ export default function App() {
     load()
   }, [])
 
-  // Toggle para filtros interactivos
-  const toggleClick = useCallback((setter, key, value) => {
-    setter(prev => {
-      const cur = prev[key]
-      if (cur === value) {
-        const next = { ...prev }; delete next[key]; return next
-      }
-      return { ...prev, [key]: value }
+  const toggleClickAli = useCallback((key, value) => {
+    setClickAli(prev => {
+      if (prev[key]===value) { const n={...prev}; delete n[key]; return n }
+      return { ...prev, [key]:value }
     })
   }, [])
 
-  // Opciones para selects
-  const opTecnologia = useMemo(() => [...new Set(ali.map(r => r['TIPO DE TECNOLOGÍA']).filter(Boolean))].sort(), [ali])
-  const opCiudad     = useMemo(() => [...new Set(ali.map(r => r['CIUDAD DONDE SE VA A INSTALAR']).filter(Boolean))].sort(), [ali])
-  const opComercial  = useMemo(() => [...new Set(ali.map(r => r['COMERCIAL ENCARGADO']).filter(Boolean))].sort(), [ali])
-  const opTecnico    = useMemo(() => [...new Set(ali.map(r => r['RESPONSABLE']).filter(Boolean))].sort(), [ali])
-  const opEstadoAli  = useMemo(() => [...new Set(ali.map(r => r['ESTADO FINAL']).filter(Boolean))].sort(), [ali])
-  const opEstadoTraz = useMemo(() => [...new Set(traz.map(r => r.estado_trazabilidad).filter(Boolean))].sort(), [traz])
+  const toggleClickTraz = useCallback((key, value) => {
+    setClickTraz(prev => {
+      if (prev[key]===value) { const n={...prev}; delete n[key]; return n }
+      return { ...prev, [key]:value }
+    })
+  }, [])
 
-  // ── Filtrado Alistamiento ──────────────────────────────────
+  const opTecnologia = useMemo(() => [...new Set(ali.map(r=>r['TIPO DE TECNOLOGÍA']).filter(Boolean))].sort(), [ali])
+  const opCiudad     = useMemo(() => [...new Set(ali.map(r=>r['CIUDAD DONDE SE VA A INSTALAR']).filter(Boolean))].sort(), [ali])
+  const opComercial  = useMemo(() => [...new Set(ali.map(r=>r['COMERCIAL ENCARGADO']).filter(Boolean))].sort(), [ali])
+  const opTecnico    = useMemo(() => [...new Set(ali.map(r=>r['RESPONSABLE']).filter(Boolean))].sort(), [ali])
+  const opEstadoAli  = useMemo(() => [...new Set(ali.map(r=>r['ESTADO FINAL']).filter(Boolean))].sort(), [ali])
+  const opEstadoTraz = useMemo(() => [...new Set(traz.map(r=>r.estado_trazabilidad).filter(Boolean))].sort(), [traz])
+
   const aliFiltrada = useMemo(() => ali.filter(r => {
     const fecha = parseFechaDate(r['Marca temporal'])
     const desde = fAliDesde ? new Date(fAliDesde) : null
@@ -435,39 +472,38 @@ export default function App() {
     return (
       (!fAliCliente    || (r['NOMBRE CLIENTE']||'').toLowerCase().includes(fAliCliente.toLowerCase())) &&
       (!fAliPlaca      || (r['IDENTIFICACIÓN DEL ACTIVO (PLACA)']||'').toLowerCase().includes(fAliPlaca.toLowerCase())) &&
-      (!fAliTecnico    || r['RESPONSABLE'] === fAliTecnico) &&
-      (!fAliTecnologia || r['TIPO DE TECNOLOGÍA'] === fAliTecnologia) &&
-      (!fAliCiudad     || r['CIUDAD DONDE SE VA A INSTALAR'] === fAliCiudad) &&
-      (!fAliComercial  || r['COMERCIAL ENCARGADO'] === fAliComercial) &&
-      (!fAliEstado     || r['ESTADO FINAL'] === fAliEstado) &&
-      (!desde || !fecha || fecha >= desde) &&
-      (!hasta || !fecha || fecha <= hasta) &&
-      // Filtros interactivos por clic
-      (!clickAli.ciudad      || r['CIUDAD DONDE SE VA A INSTALAR'] === clickAli.ciudad) &&
-      (!clickAli.tecnologia  || r['TIPO DE TECNOLOGÍA'] === clickAli.tecnologia) &&
-      (!clickAli.operador    || r['OPERADOR SIM CARD'] === clickAli.operador) &&
-      (!clickAli.comercial   || r['COMERCIAL ENCARGADO'] === clickAli.comercial) &&
-      (!clickAli.responsable || r['RESPONSABLE'] === clickAli.responsable) &&
-      (!clickAli.estado      || r['ESTADO FINAL'] === clickAli.estado)
+      (!fAliTecnico    || r['RESPONSABLE']===fAliTecnico) &&
+      (!fAliTecnologia || r['TIPO DE TECNOLOGÍA']===fAliTecnologia) &&
+      (!fAliCiudad     || r['CIUDAD DONDE SE VA A INSTALAR']===fAliCiudad) &&
+      (!fAliComercial  || r['COMERCIAL ENCARGADO']===fAliComercial) &&
+      (!fAliEstado     || r['ESTADO FINAL']===fAliEstado) &&
+      (!desde||!fecha||fecha>=desde) &&
+      (!hasta||!fecha||fecha<=hasta) &&
+      (!clickAli.ciudad      || r['CIUDAD DONDE SE VA A INSTALAR']===clickAli.ciudad) &&
+      (!clickAli.tecnologia  || r['TIPO DE TECNOLOGÍA']===clickAli.tecnologia) &&
+      (!clickAli.operador    || r['OPERADOR SIM CARD']===clickAli.operador) &&
+      (!clickAli.comercial   || r['COMERCIAL ENCARGADO']===clickAli.comercial) &&
+      (!clickAli.responsable || r['RESPONSABLE']===clickAli.responsable) &&
+      (!clickAli.estado      || r['ESTADO FINAL']===clickAli.estado)
     )
   }), [ali, fAliCliente, fAliPlaca, fAliTecnico, fAliTecnologia, fAliCiudad, fAliComercial, fAliEstado, fAliDesde, fAliHasta, clickAli])
 
   const aliActive = !!(fAliCliente||fAliPlaca||fAliTecnico||fAliTecnologia||fAliCiudad||fAliComercial||fAliEstado||fAliDesde||fAliHasta||Object.keys(clickAli).length)
   const totalAli     = aliFiltrada.length
-  const aprobados    = aliFiltrada.filter(r => r['ESTADO FINAL'] === 'APROBADO').length
-  const reutilizados = aliFiltrada.filter(r => r['CONDICIÓN DEL EQUIPO'] === 'USADO').length
+  const aprobados    = aliFiltrada.filter(r=>r['ESTADO FINAL']==='APROBADO').length
+  const reutilizados = aliFiltrada.filter(r=>r['CONDICIÓN DEL EQUIPO']==='USADO').length
 
   const tiempoPromedio = useMemo(() => {
-    const vals = aliFiltrada.map(r => parseFloat(r['TIEMPO EMPLEADO EN LA CONFIGURACIÓN DEL EQUIPO (MINUTOS)'])).filter(v => !isNaN(v))
-    return vals.length ? Math.round(vals.reduce((a,b) => a+b, 0) / vals.length) : 0
+    const vals = aliFiltrada.map(r=>parseFloat(r['TIEMPO EMPLEADO EN LA CONFIGURACIÓN DEL EQUIPO (MINUTOS)'])).filter(v=>!isNaN(v))
+    return vals.length ? Math.round(vals.reduce((a,b)=>a+b,0)/vals.length) : 0
   }, [aliFiltrada])
 
   const ultimoAli = useMemo(() => {
     if (!ali.length) return '-'
-    const mejor = ali.reduce((max, r) =>
-      parseFechaNum(r['Marca temporal']) > parseFechaNum(max['Marca temporal']) ? r : max, ali[0])
-    const f = String(mejor['Marca temporal'] || '').trim().split(' ')[0].split('/')
-    if (f.length !== 3) return '-'
+    const mejor = ali.reduce((max,r) =>
+      parseFechaNum(r['Marca temporal'])>parseFechaNum(max['Marca temporal'])?r:max, ali[0])
+    const f = String(mejor['Marca temporal']||'').trim().split(' ')[0].split('/')
+    if (f.length!==3) return '-'
     return `${f[0].padStart(2,'0')}/${f[1].padStart(2,'0')}/${f[2]}`
   }, [ali])
 
@@ -487,45 +523,44 @@ export default function App() {
 
   const porTecnologia = useMemo(() => {
     const map = {}
-    aliFiltrada.forEach(r => { const t = r['TIPO DE TECNOLOGÍA']||'Sin datos'; map[t]=(map[t]||0)+1 })
-    return Object.entries(map).sort((a,b) => b[1]-a[1]).slice(0,9).map(([name,value]) => ({name,value}))
+    aliFiltrada.forEach(r => { const t=r['TIPO DE TECNOLOGÍA']||'Sin datos'; map[t]=(map[t]||0)+1 })
+    return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,9).map(([name,value])=>({name,value}))
   }, [aliFiltrada])
 
   const porOperador = useMemo(() => {
     const map = {}
-    aliFiltrada.forEach(r => { const o = r['OPERADOR SIM CARD']||'N/A'; map[o]=(map[o]||0)+1 })
-    return Object.entries(map).map(([name,value]) => ({name,value}))
+    aliFiltrada.forEach(r => { const o=r['OPERADOR SIM CARD']||'N/A'; map[o]=(map[o]||0)+1 })
+    return Object.entries(map).map(([name,value])=>({name,value}))
   }, [aliFiltrada])
 
   const porCiudad = useMemo(() => {
     const map = {}
-    aliFiltrada.forEach(r => { const c = r['CIUDAD DONDE SE VA A INSTALAR']||'N/A'; map[c]=(map[c]||0)+1 })
-    return Object.entries(map).sort((a,b) => b[1]-a[1]).slice(0,10)
-      .map(([name,value]) => ({name,value,pct:totalAli?((value/totalAli)*100).toFixed(1):'0'}))
+    aliFiltrada.forEach(r => { const c=r['CIUDAD DONDE SE VA A INSTALAR']||'N/A'; map[c]=(map[c]||0)+1 })
+    return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10)
+      .map(([name,value])=>({name,value,pct:totalAli?((value/totalAli)*100).toFixed(1):'0'}))
   }, [aliFiltrada, totalAli])
 
   const porCliente = useMemo(() => {
     const map = {}
-    aliFiltrada.forEach(r => { const c = r['NOMBRE CLIENTE']||'N/A'; map[c]=(map[c]||0)+1 })
-    return Object.entries(map).sort((a,b) => b[1]-a[1]).slice(0,10)
-      .map(([name,value]) => ({name,value,pct:totalAli?((value/totalAli)*100).toFixed(1):'0'}))
+    aliFiltrada.forEach(r => { const c=r['NOMBRE CLIENTE']||'N/A'; map[c]=(map[c]||0)+1 })
+    return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10)
+      .map(([name,value])=>({name,value,pct:totalAli?((value/totalAli)*100).toFixed(1):'0'}))
   }, [aliFiltrada, totalAli])
 
   const porComercial = useMemo(() => {
     const map = {}
-    aliFiltrada.forEach(r => { const c = r['COMERCIAL ENCARGADO']||'N/A'; map[c]=(map[c]||0)+1 })
-    return Object.entries(map).sort((a,b) => b[1]-a[1])
-      .map(([name,value]) => ({name,value,pct:totalAli?((value/totalAli)*100).toFixed(1):'0'}))
+    aliFiltrada.forEach(r => { const c=r['COMERCIAL ENCARGADO']||'N/A'; map[c]=(map[c]||0)+1 })
+    return Object.entries(map).sort((a,b)=>b[1]-a[1])
+      .map(([name,value])=>({name,value,pct:totalAli?((value/totalAli)*100).toFixed(1):'0'}))
   }, [aliFiltrada, totalAli])
 
   const datosMapa = useMemo(() => {
     const map = {}
     aliFiltrada.forEach(r => { const c=(r['CIUDAD DONDE SE VA A INSTALAR']||'').trim(); if(c) map[c]=(map[c]||0)+1 })
-    return Object.entries(map).filter(([name]) => CIUDAD_COORDS[name.toUpperCase().trim()])
-      .sort((a,b) => b[1]-a[1]).map(([name,value]) => ({name,value}))
+    return Object.entries(map).filter(([name])=>CIUDAD_COORDS[name.toUpperCase().trim()])
+      .sort((a,b)=>b[1]-a[1]).map(([name,value])=>({name,value}))
   }, [aliFiltrada])
 
-  // ── Filtrado Trazabilidad ──────────────────────────────────
   const trazFiltrada = useMemo(() => traz.filter(r => {
     const desde = fTrazDesde ? new Date(fTrazDesde) : null
     const hasta = fTrazHasta ? new Date(fTrazHasta) : null
@@ -533,54 +568,46 @@ export default function App() {
     return (
       (!fTrazCliente || (r.cliente||'').toLowerCase().includes(fTrazCliente.toLowerCase())) &&
       (!fTrazPlaca   || (r.placa||'').toLowerCase().includes(fTrazPlaca.toLowerCase())) &&
-      (!fTrazAlerta  || r.nivel_alerta === fTrazAlerta) &&
-      (!fTrazEstado  || r.estado_trazabilidad === fTrazEstado) &&
-      (!desde || !fecha || fecha >= desde) &&
-      (!hasta || !fecha || fecha <= hasta) &&
-      // Filtros interactivos
-      (!clickTraz.alerta     || r.nivel_alerta === clickTraz.alerta) &&
-      (!clickTraz.estado     || r.estado_trazabilidad === clickTraz.estado) &&
-      (!clickTraz.ciudad     || r.ciudad_destino === clickTraz.ciudad) &&
-      (!clickTraz.tecnologia || r.tecnologia === clickTraz.tecnologia) &&
-      (!clickTraz.comercial  || r.comercial === clickTraz.comercial)
+      (!fTrazAlerta  || r.nivel_alerta===fTrazAlerta) &&
+      (!fTrazEstado  || r.estado_trazabilidad===fTrazEstado) &&
+      (!desde||!fecha||fecha>=desde) &&
+      (!hasta||!fecha||fecha<=hasta) &&
+      (!clickTraz.alerta    || r.nivel_alerta===clickTraz.alerta) &&
+      (!clickTraz.estado    || r.estado_trazabilidad===clickTraz.estado) &&
+      (!clickTraz.ciudad    || r.ciudad_destino===clickTraz.ciudad) &&
+      (!clickTraz.tecnologia|| r.tecnologia===clickTraz.tecnologia) &&
+      (!clickTraz.comercial || r.comercial===clickTraz.comercial)
     )
   }), [traz, fTrazCliente, fTrazPlaca, fTrazAlerta, fTrazEstado, fTrazDesde, fTrazHasta, clickTraz])
 
   const trazActive = !!(fTrazCliente||fTrazPlaca||fTrazAlerta||fTrazEstado||fTrazDesde||fTrazHasta||Object.keys(clickTraz).length)
 
-  // ── KPIs Trazabilidad ──────────────────────────────────────
-  const kpiTraz = useMemo(() => {
-    const total     = trazFiltrada.length
-    const completo  = trazFiltrada.filter(r => r.estado_trazabilidad === 'COMPLETO').length
-    const sinAli    = trazFiltrada.filter(r => r.estado_trazabilidad === 'SIN ALISTAMIENTO').length
-    const pendiente = trazFiltrada.filter(r => r.estado_trazabilidad === 'PENDIENTE INSTALACIÓN').length
-    const tardio    = trazFiltrada.filter(r => r.estado_trazabilidad === 'REGISTRO TARDÍO').length
-    // Desglose del total
-    const conAli    = trazFiltrada.filter(r => r.tiene_alistamiento === 'Sí').length
-    const conInst   = trazFiltrada.filter(r => r.tiene_instalacion === 'Sí').length
-    return { total, completo, sinAli, pendiente, tardio, conAli, conInst }
-  }, [trazFiltrada])
+  const kpiTraz = useMemo(() => ({
+    total:     trazFiltrada.length,
+    completo:  trazFiltrada.filter(r=>r.estado_trazabilidad==='COMPLETO').length,
+    sinAli:    trazFiltrada.filter(r=>r.estado_trazabilidad==='SIN ALISTAMIENTO').length,
+    pendiente: trazFiltrada.filter(r=>r.estado_trazabilidad==='PENDIENTE INSTALACIÓN').length,
+    tardio:    trazFiltrada.filter(r=>r.estado_trazabilidad==='REGISTRO TARDÍO').length,
+  }), [trazFiltrada])
 
   const porClienteTraz = useMemo(() => {
     const map = {}
     trazFiltrada.forEach(r => { const c=r.cliente||'N/A'; map[c]=(map[c]||0)+1 })
     const total = trazFiltrada.length
-    return Object.entries(map).sort((a,b) => b[1]-a[1]).slice(0,10)
-      .map(([name,value]) => ({name,value,pct:total?((value/total)*100).toFixed(1):'0'}))
+    return Object.entries(map).sort((a,b)=>b[1]-a[1]).slice(0,10)
+      .map(([name,value])=>({name,value,pct:total?((value/total)*100).toFixed(1):'0'}))
   }, [trazFiltrada])
 
   const estadosTraz = useMemo(() => {
     const map = {}
     trazFiltrada.forEach(r => { const e=r.estado_trazabilidad||'N/A'; map[e]=(map[e]||0)+1 })
-    return Object.entries(map).map(([name,value]) => ({name,value}))
+    return Object.entries(map).map(([name,value])=>({name,value}))
   }, [trazFiltrada])
 
-  const alertasTraz = useMemo(() => [
-    { name:'ROJO',    value: trazFiltrada.filter(r=>r.nivel_alerta==='ROJO').length },
-    { name:'AMARILLO',value: trazFiltrada.filter(r=>r.nivel_alerta==='AMARILLO').length },
-    { name:'VERDE',   value: trazFiltrada.filter(r=>r.nivel_alerta==='VERDE').length },
-    { name:'GRIS',    value: trazFiltrada.filter(r=>r.nivel_alerta==='GRIS').length },
-  ], [trazFiltrada])
+  const alertasTraz = useMemo(() => ALERTA_CONFIG.map(cfg => ({
+    name: cfg.key,
+    value: trazFiltrada.filter(r=>r.nivel_alerta===cfg.key).length
+  })), [trazFiltrada])
 
   const COLORES_ESTADO = {
     'COMPLETO': C.green, 'SIN ALISTAMIENTO': C.red,
@@ -588,13 +615,12 @@ export default function App() {
   }
   const PIE_COLORS = [C.cyan, C.blue, C.navy, C.cyanL, C.muted]
 
-  const pad    = isMobile ? '16px' : '28px 32px'
-  const gap    = isMobile ? 16 : 24
-  const col2   = isMobile ? '1fr' : '1.4fr 1fr'
-  const col3   = isMobile ? '1fr' : '1fr 1.5fr 1fr'
-  const col6   = isMobile ? '1fr 1fr' : 'repeat(6, 1fr)'
-  const col5   = isMobile ? '1fr 1fr' : 'repeat(5, 1fr)'
-  const colMap = isMobile ? '1fr' : '1.3fr 1fr'
+  const pad    = isMobile?'16px':'28px 32px'
+  const gap    = isMobile?16:24
+  const col2   = isMobile?'1fr':'1.4fr 1fr'
+  const col3   = isMobile?'1fr':'1fr 1.5fr 1fr'
+  const col5   = isMobile?'1fr 1fr':'repeat(5, 1fr)'
+  const colMap = isMobile?'1fr':'1.3fr 1fr'
 
   if (loading) return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', height:'100vh', background:C.surface }}>
@@ -609,11 +635,11 @@ export default function App() {
     <div style={{ minHeight:'100vh', background:C.surface }}>
       {/* HEADER */}
       <div style={{ background:'#FFFFFF', borderBottom:`1px solid ${C.border}`,
-        padding: isMobile?'0 16px':'0 32px', position:'sticky', top:0, zIndex:1000,
+        padding:isMobile?'0 16px':'0 32px', position:'sticky', top:0, zIndex:1000,
         boxShadow:'0 2px 8px rgba(30,111,191,0.08)' }}>
         <div style={{ maxWidth:1400, margin:'0 auto', display:'flex', alignItems:'center',
-          justifyContent:'space-between', height: isMobile?56:64 }}>
-          <div style={{ display:'flex', alignItems:'center', gap: isMobile?8:14 }}>
+          justifyContent:'space-between', height:isMobile?56:64 }}>
+          <div style={{ display:'flex', alignItems:'center', gap:isMobile?8:14 }}>
             <img src={LOGO} alt="LAP Technologies" style={{ height:isMobile?32:42, width:'auto', objectFit:'contain' }} />
             {!isMobile && (
               <div>
@@ -624,12 +650,12 @@ export default function App() {
           </div>
           <div style={{ display:'flex', gap:4 }}>
             {[{key:'alistamiento',label:'Alistamiento'},{key:'trazabilidad',label:'Trazabilidad'}].map(t => (
-              <button key={t.key} onClick={() => setTab(t.key)} style={{
-                background: tab===t.key?'rgba(0,180,216,0.1)':'transparent',
-                border: tab===t.key?`1px solid ${C.cyan}`:`1px solid ${C.border}`,
-                color: tab===t.key?C.cyan:C.muted,
-                padding: isMobile?'6px 12px':'7px 18px',
-                borderRadius:8, fontSize: isMobile?11:12, fontWeight:600, cursor:'pointer'
+              <button key={t.key} onClick={()=>setTab(t.key)} style={{
+                background:tab===t.key?'rgba(0,180,216,0.1)':'transparent',
+                border:tab===t.key?`1px solid ${C.cyan}`:`1px solid ${C.border}`,
+                color:tab===t.key?C.cyan:C.muted,
+                padding:isMobile?'6px 12px':'7px 18px',
+                borderRadius:8, fontSize:isMobile?11:12, fontWeight:600, cursor:'pointer'
               }}>{t.label}</button>
             ))}
           </div>
@@ -644,7 +670,7 @@ export default function App() {
       <div style={{ maxWidth:1400, margin:'0 auto', padding:pad }}>
 
         {/* ══════════ ALISTAMIENTO ══════════ */}
-        {tab === 'alistamiento' && (
+        {tab==='alistamiento' && (
           <div style={{ display:'flex', flexDirection:'column', gap }}>
             <div>
               <h1 style={{ fontSize:isMobile?16:20, fontWeight:700, color:C.navy }}>
@@ -655,21 +681,19 @@ export default function App() {
               </p>
             </div>
 
-            {/* Chips de filtros interactivos activos */}
-            {Object.keys(clickAli).length > 0 && (
+            {Object.keys(clickAli).length>0 && (
               <div style={{ display:'flex', flexWrap:'wrap', gap:6, alignItems:'center' }}>
                 <span style={{ fontSize:10, color:C.muted, fontWeight:600 }}>Filtros activos:</span>
                 {Object.entries(clickAli).map(([k,v]) => (
-                  <ActiveChip key={k} label={`${k}: ${v}`}
-                    onRemove={() => toggleClick(setClickAli, k, v)} />
+                  <ActiveChip key={k} label={`${k}: ${v}`} onRemove={()=>toggleClickAli(k,v)} />
                 ))}
               </div>
             )}
 
             <FilterBar isMobile={isMobile}
-              onClear={() => { setFAliCliente(''); setFAliPlaca(''); setFAliTecnico('');
-                setFAliTecnologia(''); setFAliCiudad(''); setFAliComercial('');
-                setFAliEstado(''); setFAliDesde(''); setFAliHasta(''); setClickAli({}) }}
+              onClear={()=>{ setFAliCliente('');setFAliPlaca('');setFAliTecnico('');
+                setFAliTecnologia('');setFAliCiudad('');setFAliComercial('');
+                setFAliEstado('');setFAliDesde('');setFAliHasta('');setClickAli({}) }}
               count={aliFiltrada.length} active={aliActive}>
               <FInput  label="Cliente"     placeholder="Buscar cliente..." value={fAliCliente}    setter={setFAliCliente} />
               <FInput  label="Placa"       placeholder="Buscar placa..."   value={fAliPlaca}      setter={setFAliPlaca} />
@@ -690,7 +714,6 @@ export default function App() {
               <KPI label="Tiempo Prom (Min)" value={tiempoPromedio}          accent={C.blue} />
             </div>
 
-            {/* Gráficas — clic interactivo */}
             <div style={{ display:'grid', gridTemplateColumns:col2, gap:14 }}>
               <Card>
                 <SectionTitle>Alistamientos por Mes</SectionTitle>
@@ -707,16 +730,16 @@ export default function App() {
                 </ResponsiveContainer>
               </Card>
               <Card>
-                <SectionTitle>Tipo de Tecnología — clic para filtrar</SectionTitle>
+                <SectionTitle>Tipo de Tecnología</SectionTitle>
                 <div style={{ display:'flex', flexDirection:'column', gap:5 }}>
                   {porTecnologia.map((t,i) => {
-                    const activo = clickAli.tecnologia === t.name
+                    const activo = clickAli.tecnologia===t.name
                     return (
-                      <div key={i} onClick={() => toggleClick(setClickAli,'tecnologia',t.name)}
+                      <div key={i} onClick={()=>toggleClickAli('tecnologia',t.name)}
                         style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer',
-                          opacity: clickAli.tecnologia && !activo ? 0.4 : 1,
+                          opacity:clickAli.tecnologia&&!activo?0.35:1,
                           borderRadius:6, padding:'2px 4px',
-                          background: activo?'rgba(0,180,216,0.08)':'transparent' }}>
+                          background:activo?'rgba(0,180,216,0.08)':'transparent' }}>
                         <span style={{ fontSize:10, color:C.muted, width:100, textAlign:'right' }}>{t.name}</span>
                         <div style={{ flex:1, height:14, background:C.s3, borderRadius:4, overflow:'hidden' }}>
                           <div style={{ width:`${porTecnologia[0]?.value?(t.value/porTecnologia[0].value)*100:0}%`,
@@ -732,15 +755,16 @@ export default function App() {
 
             <div style={{ display:'grid', gridTemplateColumns:col3, gap:14 }}>
               <Card>
-                <SectionTitle>Telefonía — clic para filtrar</SectionTitle>
+                <SectionTitle>Empresa de Telefonía</SectionTitle>
                 <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
                     <Pie data={porOperador} cx="50%" cy="50%" innerRadius={40} outerRadius={60}
                       dataKey="value" nameKey="name"
-                      onClick={(d) => toggleClick(setClickAli,'operador',d.name)}>
+                      onClick={(d)=>toggleClickAli('operador',d.name)}>
                       {porOperador.map((d,i) => (
                         <Cell key={i} fill={PIE_COLORS[i%PIE_COLORS.length]}
-                          opacity={clickAli.operador && clickAli.operador !== d.name ? 0.3 : 1} />
+                          opacity={clickAli.operador&&clickAli.operador!==d.name?0.25:1}
+                          style={{ cursor:'pointer' }} />
                       ))}
                     </Pie>
                     <Tooltip content={<CustomTooltip />} />
@@ -749,20 +773,20 @@ export default function App() {
                 </ResponsiveContainer>
               </Card>
               <Card>
-                <SectionTitle>Ciudad — clic para filtrar</SectionTitle>
+                <SectionTitle>Ciudad de Instalación</SectionTitle>
                 <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
                   {porCiudad.map((c,i) => {
-                    const activo = clickAli.ciudad === c.name
+                    const activo = clickAli.ciudad===c.name
                     return (
-                      <div key={i} onClick={() => toggleClick(setClickAli,'ciudad',c.name)}
+                      <div key={i} onClick={()=>toggleClickAli('ciudad',c.name)}
                         style={{ display:'flex', alignItems:'center', gap:6, cursor:'pointer',
-                          opacity: clickAli.ciudad && !activo ? 0.4 : 1,
+                          opacity:clickAli.ciudad&&!activo?0.35:1,
                           borderRadius:4, padding:'1px 2px',
-                          background: activo?'rgba(0,180,216,0.08)':'transparent' }}>
+                          background:activo?'rgba(0,180,216,0.08)':'transparent' }}>
                         <span style={{ fontSize:9, color:C.muted, width:80, textAlign:'right' }}>{c.name}</span>
                         <div style={{ flex:1, height:12, background:C.s3, borderRadius:3, overflow:'hidden' }}>
                           <div style={{ width:`${c.pct}%`, height:'100%',
-                            background: activo?C.cyan:`linear-gradient(90deg,${C.blue},${C.cyan})`, borderRadius:3 }} />
+                            background:activo?C.cyan:`linear-gradient(90deg,${C.blue},${C.cyan})`, borderRadius:3 }} />
                         </div>
                         <span style={{ fontSize:9, color:C.muted, width:34 }}>{c.pct}%</span>
                       </div>
@@ -771,7 +795,7 @@ export default function App() {
                 </div>
               </Card>
               <Card>
-                <SectionTitle>Condición</SectionTitle>
+                <SectionTitle>Condición del Equipo</SectionTitle>
                 <ResponsiveContainer width="100%" height={160}>
                   <PieChart>
                     <Pie data={[{name:'NUEVO',value:totalAli-reutilizados},{name:'USADO',value:reutilizados}]}
@@ -800,22 +824,22 @@ export default function App() {
             </div>
 
             <Card>
-              <SectionTitle>Comercial Encargado — clic para filtrar</SectionTitle>
+              <SectionTitle>Comercial Encargado</SectionTitle>
               <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                 {porComercial.map((c,i) => {
-                  const activo = clickAli.comercial === c.name
+                  const activo = clickAli.comercial===c.name
                   return (
-                    <div key={i} onClick={() => toggleClick(setClickAli,'comercial',c.name)}
-                      style={{ cursor:'pointer', opacity: clickAli.comercial && !activo ? 0.4 : 1,
+                    <div key={i} onClick={()=>toggleClickAli('comercial',c.name)}
+                      style={{ cursor:'pointer', opacity:clickAli.comercial&&!activo?0.35:1,
                         borderRadius:6, padding:'4px 6px',
-                        background: activo?'rgba(0,180,216,0.06)':'transparent' }}>
+                        background:activo?'rgba(0,180,216,0.06)':'transparent' }}>
                       <div style={{ display:'flex', justifyContent:'space-between', marginBottom:3 }}>
                         <span style={{ fontSize:11, color:C.text }}>{c.name}</span>
                         <span style={{ fontSize:11, color:C.blue, fontWeight:600 }}>{c.value} · {c.pct}%</span>
                       </div>
                       <div style={{ height:5, background:C.s3, borderRadius:3, overflow:'hidden' }}>
                         <div style={{ width:`${c.pct}%`, height:'100%',
-                          background: activo?C.cyan:`linear-gradient(90deg,${C.cyan},${C.blue})`, borderRadius:3 }} />
+                          background:activo?C.cyan:`linear-gradient(90deg,${C.cyan},${C.blue})`, borderRadius:3 }} />
                       </div>
                     </div>
                   )
@@ -849,8 +873,8 @@ export default function App() {
                         <td style={{ padding:'6px 8px', color:C.muted, fontSize:10 }}>{r['COMERCIAL ENCARGADO']}</td>
                         <td style={{ padding:'6px 8px' }}>
                           <span style={{
-                            background: r['ESTADO FINAL']==='APROBADO'?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)',
-                            color: r['ESTADO FINAL']==='APROBADO'?'#059669':'#DC2626',
+                            background:r['ESTADO FINAL']==='APROBADO'?'rgba(16,185,129,0.12)':'rgba(239,68,68,0.12)',
+                            color:r['ESTADO FINAL']==='APROBADO'?'#059669':'#DC2626',
                             padding:'2px 6px', borderRadius:20, fontSize:9, fontWeight:700
                           }}>{r['ESTADO FINAL']}</span>
                         </td>
@@ -858,7 +882,7 @@ export default function App() {
                     ))}
                   </tbody>
                 </table>
-                {aliFiltrada.length > 100 && (
+                {aliFiltrada.length>100 && (
                   <p style={{ fontSize:11, color:C.muted, padding:'10px', textAlign:'center' }}>
                     Mostrando 100 de {aliFiltrada.length} registros
                   </p>
@@ -869,7 +893,7 @@ export default function App() {
         )}
 
         {/* ══════════ TRAZABILIDAD ══════════ */}
-        {tab === 'trazabilidad' && (
+        {tab==='trazabilidad' && (
           <div style={{ display:'flex', flexDirection:'column', gap }}>
             <div>
               <h1 style={{ fontSize:isMobile?16:20, fontWeight:700, color:C.navy }}>
@@ -878,20 +902,18 @@ export default function App() {
               <p style={{ fontSize:11, color:C.muted, marginTop:2 }}>Cruce Movidesk · Alistamientos · Servicios I&M</p>
             </div>
 
-            {/* Chips filtros interactivos trazabilidad */}
-            {Object.keys(clickTraz).length > 0 && (
+            {Object.keys(clickTraz).length>0 && (
               <div style={{ display:'flex', flexWrap:'wrap', gap:6, alignItems:'center' }}>
                 <span style={{ fontSize:10, color:C.muted, fontWeight:600 }}>Filtros activos:</span>
                 {Object.entries(clickTraz).map(([k,v]) => (
-                  <ActiveChip key={k} label={`${k}: ${v}`}
-                    onRemove={() => toggleClick(setClickTraz, k, v)} />
+                  <ActiveChip key={k} label={`${k}: ${v}`} onRemove={()=>toggleClickTraz(k,v)} />
                 ))}
               </div>
             )}
 
             <FilterBar isMobile={isMobile}
-              onClear={() => { setFTrazCliente(''); setFTrazPlaca('');
-                setFTrazAlerta(''); setFTrazEstado(''); setFTrazDesde(''); setFTrazHasta(''); setClickTraz({}) }}
+              onClear={()=>{ setFTrazCliente('');setFTrazPlaca('');
+                setFTrazAlerta('');setFTrazEstado('');setFTrazDesde('');setFTrazHasta('');setClickTraz({}) }}
               count={trazFiltrada.length} active={trazActive}>
               <FInput  label="Cliente" placeholder="Buscar cliente..." value={fTrazCliente} setter={setFTrazCliente} />
               <FInput  label="Placa"   placeholder="Buscar placa..."   value={fTrazPlaca}   setter={setFTrazPlaca} />
@@ -901,45 +923,16 @@ export default function App() {
               <FDate   label="Hasta"   value={fTrazHasta}  setter={setFTrazHasta} />
             </FilterBar>
 
-            {/* KPIs Trazabilidad — sin Alerta Roja/Amarilla, con Registro Tardío */}
-            <div style={{ display:'grid', gridTemplateColumns:col6, gap:10 }}>
-              {/* KPI Total con desglose */}
-              <KPI label="Total Registros" value={fmt(kpiTraz.total)} accent={C.cyan}>
-                <div style={{ marginTop:6, borderTop:`1px solid ${C.border}`, paddingTop:6, display:'flex', flexDirection:'column', gap:2 }}>
-                  <span style={{ fontSize:9, color:C.muted }}>
-                    📋 Con alistamiento: <b style={{ color:C.text }}>{fmt(kpiTraz.conAli)}</b>
-                  </span>
-                  <span style={{ fontSize:9, color:C.muted }}>
-                    🔧 Con instalación: <b style={{ color:C.text }}>{fmt(kpiTraz.conInst)}</b>
-                  </span>
-                  <span style={{ fontSize:9, color:C.muted }}>
-                    🌐 Solo Movidesk: <b style={{ color:C.text }}>{fmt(kpiTraz.total - kpiTraz.conAli - kpiTraz.conInst < 0 ? 0 : kpiTraz.total)}</b>
-                  </span>
-                </div>
-              </KPI>
-              <KPI label="Trazabilidad Completa" value={fmt(kpiTraz.completo)}  sub={pct(kpiTraz.completo,kpiTraz.total)}  accent={C.green} />
-              <KPI label="Sin Alistamiento"       value={fmt(kpiTraz.sinAli)}    sub={pct(kpiTraz.sinAli,kpiTraz.total)}    accent={C.red} />
-              <KPI label="Pendiente Instalación"  value={fmt(kpiTraz.pendiente)} sub={pct(kpiTraz.pendiente,kpiTraz.total)} accent={C.yellow} />
-              <KPI label="Registro Tardío"        value={fmt(kpiTraz.tardio)}    sub={pct(kpiTraz.tardio,kpiTraz.total)}    accent={C.blue} />
-              {/* Sexto KPI: resumen de fuentes */}
-              <div style={{ background:C.s2, border:`1px solid ${C.border}`, borderRadius:12,
-                padding:'16px 18px', boxShadow:'0 2px 8px rgba(30,111,191,0.08)', display:'flex', flexDirection:'column', gap:6 }}>
-                <span style={{ fontSize:10, color:C.muted, textTransform:'uppercase', letterSpacing:1 }}>Fuentes de datos</span>
-                <div style={{ display:'flex', flexDirection:'column', gap:4 }}>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}>
-                    <span style={{ fontSize:10, color:C.muted }}>🌐 Movidesk</span>
-                    <span style={{ fontSize:11, fontWeight:700, color:C.text }}>{fmt(kpiTraz.total)}</span>
-                  </div>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}>
-                    <span style={{ fontSize:10, color:C.muted }}>📋 Alistamientos</span>
-                    <span style={{ fontSize:11, fontWeight:700, color:C.text }}>{fmt(kpiTraz.conAli)}</span>
-                  </div>
-                  <div style={{ display:'flex', justifyContent:'space-between' }}>
-                    <span style={{ fontSize:10, color:C.muted }}>🔧 Servicios I&M</span>
-                    <span style={{ fontSize:11, fontWeight:700, color:C.text }}>{fmt(kpiTraz.conInst)}</span>
-                  </div>
-                </div>
-              </div>
+            {/* KPIs — 6 tarjetas: Total (rojo) + 4 estados + Significado (verde) */}
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr 1fr':'repeat(6,1fr)', gap:10 }}>
+              {/* Tarjeta 1: Total Registros — acento rojo */}
+              <KPI label="Total Registros" value={fmt(kpiTraz.total)} accent={C.red} />
+              <KPI label="Trazabilidad Completa"  value={fmt(kpiTraz.completo)}  sub={pct(kpiTraz.completo,kpiTraz.total)}  accent={C.green} />
+              <KPI label="Sin Alistamiento"        value={fmt(kpiTraz.sinAli)}    sub={pct(kpiTraz.sinAli,kpiTraz.total)}    accent={C.red} />
+              <KPI label="Pendiente Instalación"   value={fmt(kpiTraz.pendiente)} sub={pct(kpiTraz.pendiente,kpiTraz.total)} accent={C.yellow} />
+              <KPI label="Registro Tardío"         value={fmt(kpiTraz.tardio)}    sub={pct(kpiTraz.tardio,kpiTraz.total)}    accent={C.blue} />
+              {/* Tarjeta 6: Significado de los Estados — acento verde */}
+              <SignificadoEstados />
             </div>
 
             <Card>
@@ -947,20 +940,22 @@ export default function App() {
               <TopClientes datos={porClienteTraz} />
             </Card>
 
-            <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1fr', gap:14 }}>
-              {/* Estado de trazabilidad — clic interactivo */}
+            {/* Estado de Trazabilidad + Nivel de Alerta mejorado */}
+            <div style={{ display:'grid', gridTemplateColumns:isMobile?'1fr':'1fr 1.4fr', gap:14 }}>
               <Card>
-                <SectionTitle>Estado de Trazabilidad — clic para filtrar</SectionTitle>
+                <SectionTitle>Estado de Trazabilidad</SectionTitle>
                 <div style={{ display:'flex', flexDirection:'column', gap:8 }}>
                   {estadosTraz.map((e,i) => {
-                    const activo = clickTraz.estado === e.name
+                    const activo = clickTraz.estado===e.name
+                    const cfg = ESTADO_CONFIG.find(c=>c.key===e.name)
                     return (
-                      <div key={i} onClick={() => toggleClick(setClickTraz,'estado',e.name)}
+                      <div key={i} onClick={()=>toggleClickTraz('estado',e.name)}
                         style={{ display:'flex', alignItems:'center', gap:8, cursor:'pointer',
-                          opacity: clickTraz.estado && !activo ? 0.4 : 1,
+                          opacity:clickTraz.estado&&!activo?0.35:1,
                           borderRadius:6, padding:'3px 4px',
-                          background: activo?'rgba(0,180,216,0.06)':'transparent' }}>
-                        <div style={{ width:10, height:10, borderRadius:2, background:COLORES_ESTADO[e.name]||C.muted, flexShrink:0 }} />
+                          background:activo?'rgba(0,180,216,0.06)':'transparent' }}>
+                        <div style={{ width:10, height:10, borderRadius:2,
+                          background:COLORES_ESTADO[e.name]||C.muted, flexShrink:0 }} />
                         <span style={{ fontSize:11, color:C.muted, flex:1 }}>{e.name}</span>
                         <div style={{ width:100, height:12, background:C.s3, borderRadius:3, overflow:'hidden' }}>
                           <div style={{ width:`${kpiTraz.total?(e.value/kpiTraz.total)*100:0}%`, height:'100%',
@@ -971,28 +966,25 @@ export default function App() {
                     )
                   })}
                 </div>
-                <LeyendaEstados />
+                {/* Leyenda de estados integrada */}
+                <div style={{ marginTop:14, paddingTop:12, borderTop:`1px solid ${C.border}` }}>
+                  <p style={{ fontSize:10, color:C.muted, fontWeight:700, marginBottom:8, textTransform:'uppercase', letterSpacing:0.8 }}>
+                    Significado de cada estado
+                  </p>
+                  {ESTADO_CONFIG.map(cfg => (
+                    <div key={cfg.key} style={{ display:'flex', gap:7, marginBottom:5, alignItems:'flex-start' }}>
+                      <div style={{ width:8, height:8, borderRadius:2, background:cfg.color, flexShrink:0, marginTop:3 }} />
+                      <p style={{ fontSize:9, color:C.muted, lineHeight:1.4, margin:0 }}>
+                        <b style={{ color:C.text }}>{cfg.key}:</b> {cfg.desc}
+                      </p>
+                    </div>
+                  ))}
+                </div>
               </Card>
 
-              {/* Nivel de alerta — clic interactivo + leyenda */}
-              <Card>
-                <SectionTitle>Nivel de Alerta — clic para filtrar</SectionTitle>
-                <ResponsiveContainer width="100%" height={180}>
-                  <PieChart>
-                    <Pie data={alertasTraz} cx="50%" cy="50%" innerRadius={45} outerRadius={65}
-                      dataKey="value" onClick={(d) => toggleClick(setClickTraz,'alerta',d.name)}>
-                      {alertasTraz.map((d,i) => {
-                        const colors = [C.red, C.yellow, C.green, C.muted]
-                        return <Cell key={i} fill={colors[i]}
-                          opacity={clickTraz.alerta && clickTraz.alerta !== d.name ? 0.3 : 1} />
-                      })}
-                    </Pie>
-                    <Tooltip content={<CustomTooltip />} />
-                    <Legend wrapperStyle={{ fontSize:10, color:C.muted }} />
-                  </PieChart>
-                </ResponsiveContainer>
-                <LeyendaAlertas />
-              </Card>
+              {/* Nivel de Alerta mejorado */}
+              <NivelAlertaCard datos={alertasTraz} clickTraz={clickTraz}
+                toggleClick={(key,val)=>toggleClickTraz(key,val)} />
             </div>
 
             <Card>
@@ -1025,7 +1017,7 @@ export default function App() {
                     ))}
                   </tbody>
                 </table>
-                {trazFiltrada.length > 100 && (
+                {trazFiltrada.length>100 && (
                   <p style={{ fontSize:11, color:C.muted, padding:'10px', textAlign:'center' }}>
                     Mostrando 100 de {trazFiltrada.length} registros
                   </p>

@@ -952,7 +952,7 @@ export default function App() {
 
               <KPI label="Registro Tardío" value={fmt(kpiTraz.tardio)}
                 sub={pct(kpiTraz.tardio,kpiTraz.total)} accent={C.blue}
-                desc="El alistamiento fue registrado después de la fecha de instalación." />
+                desc="El alistamiento fue registrado después de la fecha de instalación; sin embargo, los registros se encuentran cruzados, ya que cuenta con alistamiento e instalación registrados." />
             </div>
 
             <Card>

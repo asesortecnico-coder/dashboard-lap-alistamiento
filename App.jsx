@@ -684,16 +684,28 @@ export default function App() {
                 <SectionTitle>Alistamientos por Mes</SectionTitle>
                 <ResponsiveContainer width="100%" height={200}>
                   <BarChart data={porMes} barSize={18}
-                    onClick={(data)=>{ if(data?.activeLabel) toggleClickAli('mes',data.activeLabel) }}>
+                    onClick={(data)=>{
+                      const m=data?.activePayload?.[0]?.payload?.mes
+                      if(m) toggleClickAli('mes',m)
+                    }}
+                    style={{cursor:'pointer'}}>
                     <CartesianGrid strokeDasharray="3 3" stroke={C.border} vertical={false} />
                     <XAxis dataKey="mes" tick={{fill:C.muted,fontSize:10}} axisLine={false} tickLine={false} />
                     <YAxis tick={{fill:C.muted,fontSize:10}} axisLine={false} tickLine={false} />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend wrapperStyle={{fontSize:10,color:C.muted}} />
-                    <Bar dataKey="claro" name="CLARO" fill={C.cyan} radius={[4,4,0,0]}
-                      opacity={clickAli.mes?0.7:1} style={{cursor:'pointer'}} />
-                    <Bar dataKey="movistar" name="MOVISTAR" fill={C.blue} radius={[4,4,0,0]}
-                      opacity={clickAli.mes?0.7:1} style={{cursor:'pointer'}} />
+                    <Bar dataKey="claro" name="CLARO" radius={[4,4,0,0]}>
+                      {porMes.map((entry,idx)=>(
+                        <Cell key={idx} fill={C.cyan}
+                          opacity={clickAli.mes&&clickAli.mes!==entry.mes?0.25:1} />
+                      ))}
+                    </Bar>
+                    <Bar dataKey="movistar" name="MOVISTAR" radius={[4,4,0,0]}>
+                      {porMes.map((entry,idx)=>(
+                        <Cell key={idx} fill={C.blue}
+                          opacity={clickAli.mes&&clickAli.mes!==entry.mes?0.25:1} />
+                      ))}
+                    </Bar>
                   </BarChart>
                 </ResponsiveContainer>
               </Card>

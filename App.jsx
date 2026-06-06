@@ -553,8 +553,12 @@ export default function App() {
 
   const trazActive=!!(fTrazCliente||fTrazPlaca||fTrazAlerta||fTrazEstado||fTrazDesde||fTrazHasta||Object.keys(clickTraz).length)
 
-  // sinTicket es GLOBAL (no se filtra): alistamientos sin ticket en Movidesk
-  const sinTicketGlobal = useMemo(()=> ali.length - traz.filter(r=>r.tiene_alistamiento==='Sí').length, [ali, traz])
+  // sinTicket: alistamientos filtrados que no tienen ticket válido en Movidesk
+  // Sigue la misma lógica de n8n: cleanTicket = '' si está vacío, 0 o inválido
+  const sinTicket = useMemo(()=> aliFiltrada.filter(r=>{
+    const t = String(r['NÚMERO DE TICKET']||'').trim().replace(/\.0$/,'')
+    return !t || isNaN(Number(t)) || Number(t)===0
+  }).length, [aliFiltrada])
 
   const kpiTraz = useMemo(()=>({
     total:     trazFiltrada.length,
@@ -936,10 +940,7 @@ export default function App() {
                   </div>
                   <div style={{display:'flex',justifyContent:'space-between',borderTop:`1px dashed ${C.border}`,paddingTop:3,marginTop:1}}>
                     <span style={{fontSize:9,color:C.red}}>⚠️ Sin ticket</span>
-                    <span style={{fontSize:9,fontWeight:700,color:C.red,display:'flex',alignItems:'center',gap:3}}>
-                      {fmt(sinTicketGlobal)}
-                      {trazActive&&<span style={{fontSize:8,color:C.muted,fontWeight:400}}>(global)</span>}
-                    </span>
+                    <span style={{fontSize:9,fontWeight:700,color:C.red}}>{fmt(sinTicket)}</span>
                   </div>
                 </div>
               </KPI>

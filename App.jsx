@@ -553,12 +553,24 @@ export default function App() {
 
   const trazActive=!!(fTrazCliente||fTrazPlaca||fTrazAlerta||fTrazEstado||fTrazDesde||fTrazHasta||Object.keys(clickTraz).length)
 
-  // sinTicket: alistamientos filtrados que no tienen ticket válido en Movidesk
-  // Sigue la misma lógica de n8n: cleanTicket = '' si está vacío, 0 o inválido
-  const sinTicket = useMemo(()=> aliFiltrada.filter(r=>{
-    const t = String(r['NÚMERO DE TICKET']||'').trim().replace(/\.0$/,'')
-    return !t || isNaN(Number(t)) || Number(t)===0
-  }).length, [aliFiltrada])
+  // sinTicket: alistamientos SIN ticket válido, filtrados por los mismos
+  // criterios de cliente/placa activos en la vista de Trazabilidad
+  const sinTicket = useMemo(()=>{
+    const clienteActivo = fTrazCliente || clickTraz.cliente || ''
+    const placaActiva   = fTrazPlaca   || ''
+    return ali.filter(r=>{
+      const t = String(r['NÚMERO DE TICKET']||'').trim().replace(/\.0$/,'')
+      const sinTk = !t || isNaN(Number(t)) || Number(t)===0
+      if (!sinTk) return false
+      // Aplicar filtro de cliente si está activo
+      const clienteOk = !clienteActivo ||
+        (r['NOMBRE CLIENTE']||'').toLowerCase().includes(clienteActivo.toLowerCase())
+      // Aplicar filtro de placa si está activo
+      const placaOk = !placaActiva ||
+        (r['IDENTIFICACIÓN DEL ACTIVO (PLACA)']||'').toLowerCase().includes(placaActiva.toLowerCase())
+      return clienteOk && placaOk
+    }).length
+  }, [ali, fTrazCliente, fTrazPlaca, clickTraz.cliente])
 
   const kpiTraz = useMemo(()=>({
     total:     trazFiltrada.length,

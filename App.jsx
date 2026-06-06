@@ -41,11 +41,11 @@ const CIUDAD_COORDS = {
 }
 
 const ALERTA_CONFIG = [
-  { key:'ROJO',    color:'#EF4444', bg:'rgba(239,68,68,0.12)',
+  { key:'ROJO',    color:'#DC2626', bg:'rgba(239,68,68,0.12)',
     desc:'Sin alistamiento previo, o pendiente de instalación más de 29 días.' },
-  { key:'AMARILLO',color:'#F59E0B', bg:'rgba(245,158,11,0.12)',
+  { key:'AMARILLO',color:'#D97706', bg:'rgba(245,158,11,0.12)',
     desc:'Registro tardío, o pendiente de instalación entre 18 y 29 días.' },
-  { key:'VERDE',   color:'#10B981', bg:'rgba(16,185,129,0.12)',
+  { key:'VERDE',   color:'#059669', bg:'rgba(16,185,129,0.12)',
     desc:'Trazabilidad completa: alistamiento e instalación correctamente registrados.' },
   { key:'GRIS',    color:'#6B7280', bg:'rgba(107,114,128,0.12)',
     desc:'Solo en Movidesk: sin alistamiento ni instalación en I&M.' },
@@ -553,6 +553,9 @@ export default function App() {
 
   const trazActive=!!(fTrazCliente||fTrazPlaca||fTrazAlerta||fTrazEstado||fTrazDesde||fTrazHasta||Object.keys(clickTraz).length)
 
+  // sinTicket es GLOBAL (no se filtra): alistamientos sin ticket en Movidesk
+  const sinTicketGlobal = useMemo(()=> ali.length - traz.filter(r=>r.tiene_alistamiento==='Sí').length, [ali, traz])
+
   const kpiTraz = useMemo(()=>({
     total:     trazFiltrada.length,
     completo:  trazFiltrada.filter(r=>r.estado_trazabilidad==='COMPLETO').length,
@@ -679,7 +682,7 @@ export default function App() {
               <KPI label="Aprobados"         value={fmt(aprobados)}          sub={pct(aprobados,totalAli)}    accent={C.green} />
               <KPI label="Aprobación %"      value={pct(aprobados,totalAli)} accent={C.green} />
               <KPI label="Reutilizados"      value={fmt(reutilizados)}       sub={pct(reutilizados,totalAli)} accent={C.yellow} />
-              <KPI label="Tiempo Promedio" value={`${tiempoPromedio} Min`} accent={C.blue} />
+              <KPI label="Tiempo Prom (Min)" value={tiempoPromedio}          accent={C.blue} />
             </div>
 
             <div style={{display:'grid',gridTemplateColumns:col2,gap:14}}>
@@ -933,7 +936,10 @@ export default function App() {
                   </div>
                   <div style={{display:'flex',justifyContent:'space-between',borderTop:`1px dashed ${C.border}`,paddingTop:3,marginTop:1}}>
                     <span style={{fontSize:9,color:C.red}}>⚠️ Sin ticket</span>
-                    <span style={{fontSize:9,fontWeight:700,color:C.red}}>{fmt(ali.length - kpiTraz.conAli)}</span>
+                    <span style={{fontSize:9,fontWeight:700,color:C.red,display:'flex',alignItems:'center',gap:3}}>
+                      {fmt(sinTicketGlobal)}
+                      {trazActive&&<span style={{fontSize:8,color:C.muted,fontWeight:400}}>(global)</span>}
+                    </span>
                   </div>
                 </div>
               </KPI>
@@ -952,7 +958,7 @@ export default function App() {
 
               <KPI label="Registro Tardío" value={fmt(kpiTraz.tardio)}
                 sub={pct(kpiTraz.tardio,kpiTraz.total)} accent={C.blue}
-                desc="El alistamiento fue registrado después de la fecha de instalación; sin embargo, los registros se encuentran cruzados, ya que cuenta con alistamiento e instalación registrados." />
+                desc="El alistamiento fue registrado después de la fecha de instalación." />
             </div>
 
             <Card>
